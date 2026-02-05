@@ -1,68 +1,52 @@
 import axios from "axios";
 
-/*
-  This file handles all API requests.
-*/
-
 const API = axios.create({
-  baseURL: "http://localhost:3003", // backend base
+  baseURL: "http://localhost:3003",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-/* ================= AUTH APIs ================= */
+/* ================= AUTH ================= */
 
-export const loginUser = (data) => {
-  return API.post("/auth/login", data);
-};
+export const loginUser = (data) => API.post("/auth/login", data);
+export const registerUser = (data) => API.post("/auth/register", data);
 
-export const registerUser = (data) => {
-  return API.post("/auth/register", data);
-};
+/* ================= CATEGORIES ================= */
 
-/* ================= ADMIN APIs ================= */
+export const getCategories = () => API.get("/categories");
+export const addCategory = (data) => API.post("/categories/add", data);
+export const updateCategory = (id, data) =>
+  API.put(`/categories/update/${id}`, data);
+export const deleteCategory = (id) =>
+  API.delete(`/categories/delete/${id}`);
 
-export const getCategories = () => {
-  return API.get("/admin/categories");
-};
+/* ================= USERS (ADMIN) ================= */
 
-export const addCategory = (data) => {
-  return API.post("/admin/category/add", data);
-};
+export const getUsers = () => API.get("/users");
+export const updateUser = (id, data) =>
+  API.put(`/users/update/${id}`, data);
+export const deleteUser = (id) =>
+  API.delete(`/users/delete/${id}`);
 
-export const getUsers = () => {
-  return API.get("/admin/users");
-};
+/* ================= PRODUCTS (FARMER) ================= */
 
-export const addArticle = (data) => {
-  return API.post("/admin/article/add", data);
-};
+export const addProduct = (data) => API.post("/products/add", data);
+export const getProducts = () => API.get("/products");
+export const deleteProduct = (id) =>
+  API.delete(`/products/delete/${id}`);
 
-/* ================= FARMER APIs ================= */
+/* ================= ORDERS ================= */
 
-export const addProduct = (data) => {
-  return API.post("/farmer/product/add", data);
-};
+export const placeOrder = (data) => API.post("/orders/add", data);
+export const getOrders = () => API.get("/orders");
 
-export const getFarmerOrders = () => {
-  return API.get("/farmer/orders");
-};
+/* ================= ARTICLES ================= */
 
-export const addJobPost = (data) => {
-  return API.post("/farmer/job/add", data);
-};
+export const addArticle = (data) => API.post("/articles/add", data);
+export const getArticles = () => API.get("/articles");
 
-/* ================= USER APIs ================= */
+/* ================= JOBS ================= */
 
-export const getProducts = () => {
-  return API.get("/user/products");
-};
-
-export const placeOrder = (data) => {
-  return API.post("/user/order/add", data);
-};
-
-export const getUserOrders = () => {
-  return API.get("/user/orders");
-};
+export const addJobPost = (data) => API.post("/jobs/add", data);
+export const getJobs = () => API.get("/jobs");
