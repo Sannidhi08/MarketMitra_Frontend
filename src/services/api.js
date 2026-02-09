@@ -1,11 +1,32 @@
 import axios from "axios";
 
+/* ================= AXIOS INSTANCE ================= */
+
 const API = axios.create({
   baseURL: "http://localhost:3003",
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+/* ================= ATTACH USER ID (IMPORTANT) ================= */
+/*
+  We store logged-in user in localStorage as:
+  localStorage.setItem("user", JSON.stringify(user))
+*/
+
+API.interceptors.request.use(
+  (config) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (user && user.id) {
+      config.headers["x-user-id"] = user.id; // 🔑 used by adminMiddleware
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /* ================= AUTH ================= */
 
@@ -21,11 +42,18 @@ export const updateCategory = (id, data) =>
 export const deleteCategory = (id) =>
   API.delete(`/categories/delete/${id}`);
 
-/* ================= USERS (ADMIN) ================= */
+/* ================= USERS (ADMIN ONLY) ================= */
+/*
+  Backend will check:
+  - x-user-id exists
+  - user role === 'admin'
+*/
 
 export const getUsers = () => API.get("/users");
+
 export const updateUser = (id, data) =>
   API.put(`/users/update/${id}`, data);
+
 export const deleteUser = (id) =>
   API.delete(`/users/delete/${id}`);
 
@@ -50,3 +78,5 @@ export const getArticles = () => API.get("/articles");
 
 export const addJobPost = (data) => API.post("/jobs/add", data);
 export const getJobs = () => API.get("/jobs");
+
+export default API;

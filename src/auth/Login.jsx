@@ -18,111 +18,52 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-  setError("");
-  setLoading(true);
+    setError("");
 
-  if (!email || !password) {
-    setError("Email and password are required");
-    setLoading(false);
-    return;
-  }
-
-  console.log("🔍 DEBUG: Starting login process...");
-
-  try {
-    console.log("🔍 DEBUG: Calling loginUser function...");
-    const response = await loginUser({ email, password });
-    
-    // 🔍 LOG THE FULL RESPONSE
-    console.log("✅ DEBUG: Full login response:", response);
-    console.log("✅ DEBUG: Response data type:", typeof response);
-    console.log("✅ DEBUG: Response keys:", Object.keys(response));
-    
-    // Check if it's an axios response object
-    if (response.data) {
-      console.log("✅ DEBUG: Axios response - data exists:", response.data);
-      const { user, token, message } = response.data;
-      
-      // Save user data to localStorage
-      localStorage.setItem("user", JSON.stringify(user));
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-      
-      // Redirect based on role
-      if (user && user.role) {
-        switch (user.role) {
-          case "admin":
-            navigate("/admin/dashboard");
-            break;
-          case "farmer":
-            navigate("/farmer/dashboard");
-            break;
-          case "user":
-            navigate("/user/dashboard");
-            break;
-          default:
-            navigate("/");
-        }
-      } else {
-        setError("User data missing from response");
-      }
-    } 
-    // Check if it's the direct data (from fetch test)
-    else if (response.user) {
-      console.log("✅ DEBUG: Direct data - user exists:", response.user);
-      
-      localStorage.setItem("user", JSON.stringify(response.user));
-      if (response.token) {
-        localStorage.setItem("token", response.token);
-      }
-      
-      if (response.user.role) {
-        switch (response.user.role) {
-          case "admin":
-            navigate("/admin/dashboard");
-            break;
-          case "farmer":
-            navigate("/farmer/dashboard");
-            break;
-          case "user":
-            navigate("/user/dashboard");
-            break;
-          default:
-            navigate("/");
-        }
-      }
-    }
-    else {
-      console.error("❌ DEBUG: Unexpected response structure:", response);
-      setError("Unexpected response from server");
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
     }
 
-  } catch (err) {
-    console.error("❌ DEBUG: Full error:", err);
-    console.error("❌ DEBUG: Error response:", err.response?.data);
-    setError(err.response?.data?.message || "Login failed");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
 
-  // Add a test button to check the endpoint
-  const testEndpoint = async () => {
-    console.log("🧪 Testing endpoint directly...");
     try {
-      const response = await fetch('http://localhost:3003/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: 'test@test.com', password: 'test' }),
-      });
-      console.log("🧪 Test response status:", response.status);
-      const data = await response.json();
-      console.log("🧪 Test response data:", data);
-    } catch (error) {
-      console.error("🧪 Test error:", error);
+      const response = await loginUser({ email, password });
+      const { success, user, token, message } = response.data;
+
+      if (!success) {
+        setError(message || "Login failed");
+        return;
+      }
+
+      // ⛔ BLOCK FARMER IF NOT ACTIVE
+      if (user.role === "farmer" && user.status !== "approved") {
+  setError("Your farmer account is pending admin approval.");
+  return;
+}
+
+
+      // ✅ SAVE REQUIRED DATA ONLY
+localStorage.setItem("token", token);
+localStorage.setItem("userId", user.id);   // ✅ FIX
+localStorage.setItem("user", JSON.stringify(user));
+localStorage.setItem("role", user.role);
+
+
+      // 🔀 ROLE-BASED REDIRECT
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "farmer") {
+        navigate("/farmer");
+      } else {
+        navigate("/user");
+      }
+
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,22 +109,12 @@ const Login = () => {
         {loading ? "Logging in..." : "Login"}
       </Button>
 
-      {/* Add a test button */}
-      <Button
-        variant="outlined"
-        fullWidth
-        sx={{ mt: 1 }}
-        onClick={testEndpoint}
-      >
-        Test Endpoint
-      </Button>
-
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <Button
           onClick={() => navigate("/register")}
           sx={{ textTransform: "none" }}
         >
-          Don't have an account? Register
+          Don’t have an account? Register
         </Button>
       </Box>
     </Paper>

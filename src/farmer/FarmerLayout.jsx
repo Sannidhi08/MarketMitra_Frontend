@@ -66,7 +66,8 @@ const FarmerLayout = () => {
         <Box sx={{ flexGrow: 1, p: 3 }}>
           <Routes>
             {/* RELATIVE paths for nested routes */}
-            <Route path="/" element={<FarmerDashboard />} />
+            <Route index element={<FarmerDashboard />} />
+
             <Route path="products" element={<ManageProducts />} />
             <Route path="orders" element={<ViewOrders />} />
             <Route path="articles" element={<ViewArticles />} />

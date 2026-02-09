@@ -16,7 +16,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user"); // Default role
+  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -26,23 +26,37 @@ const Register = () => {
     setError("");
     setSuccess("");
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       setError("All fields are required");
       return;
     }
 
-    try {
-      await registerUser({ name, email, password, role });
+    // ✅ SET STATUS BASED ON ROLE
+    const status = role === "farmer" ? "pending" : "approved";
 
-      setSuccess("Registration successful! Please login.");
+    try {
+      await registerUser({
+        name,
+        email,
+        password,
+        role,
+        status,
+      });
+
+      if (role === "farmer") {
+        setSuccess(
+          "Registration successful! Your account is pending admin approval."
+        );
+      } else {
+        setSuccess("Registration successful! Please login.");
+      }
 
       setName("");
       setEmail("");
       setPassword("");
       setRole("user");
 
-      setTimeout(() => navigate("/login"), 1500);
-
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     }
@@ -104,16 +118,18 @@ const Register = () => {
         >
           <MenuItem value="user">User (Buyer)</MenuItem>
           <MenuItem value="farmer">Farmer (Seller)</MenuItem>
-          <MenuItem value="admin">Administrator</MenuItem>
         </Select>
       </FormControl>
 
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-        <strong>Role descriptions:</strong><br />
-        • <strong>User</strong>: Can browse and purchase products<br />
-        • <strong>Farmer</strong>: Can sell products and manage listings<br />
-        • <strong>Admin</strong>: Full system access (approval required)
-      </Typography>
+      {role === "farmer" && (
+        <Typography
+          variant="caption"
+          color="warning.main"
+          sx={{ mt: 1, display: "block" }}
+        >
+          ⚠ Farmer accounts require admin approval before login.
+        </Typography>
+      )}
 
       <Button
         variant="contained"
