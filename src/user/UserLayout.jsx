@@ -3,10 +3,10 @@ import { Routes, Route, NavLink } from "react-router-dom";
 import { Box, Button, Paper, AppBar, Toolbar, Typography } from "@mui/material";
 
 import UserDashboard from "./UserDashboard";
-import BrowseProducts from "./BrowseProducts";
+
 import Cart from "./Cart";
 import Orders from "./Orders";
-import ViewJobs from "./ViewJobs";
+
 import ChangePassword from "./ChangePassword";
 
 // Sidebar link style
@@ -45,18 +45,14 @@ const UserLayout = () => {
           <Button component={NavLink} to="/user" end style={linkStyle}>
             Dashboard
           </Button>
-          <Button component={NavLink} to="/user/products" style={linkStyle}>
-            Products
-          </Button>
+          
           <Button component={NavLink} to="/user/cart" style={linkStyle}>
             Cart
           </Button>
           <Button component={NavLink} to="/user/orders" style={linkStyle}>
             Orders
           </Button>
-          <Button component={NavLink} to="/user/jobs" style={linkStyle}>
-            Jobs
-          </Button>
+          
           <Button component={NavLink} to="/user/change-password" style={linkStyle}>
             Change Password
           </Button>
@@ -67,10 +63,10 @@ const UserLayout = () => {
           <Routes>
             {/* RELATIVE paths for nested routes */}
             <Route path="/" element={<UserDashboard />} />
-            <Route path="products" element={<BrowseProducts />} />
+            
             <Route path="cart" element={<Cart />} />
             <Route path="orders" element={<Orders />} />
-            <Route path="jobs" element={<ViewJobs />} />
+            
             <Route path="change-password" element={<ChangePassword />} />
           </Routes>
         </Box>

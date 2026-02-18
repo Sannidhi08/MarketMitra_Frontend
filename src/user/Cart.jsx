@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,8 +8,20 @@ import {
 } from "@mui/material";
 
 const Cart = () => {
-  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const userId = localStorage.getItem("userId");
+  const [cart, setCart] = useState([]);
 
+  /* LOAD USER CART */
+  useEffect(() => {
+    if (!userId) return;
+
+    const stored =
+      JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+
+    setCart(stored);
+  }, [userId]);
+
+  /* TOTAL */
   const total = cart.reduce(
     (sum, item) => sum + item.price * item.qty,
     0
@@ -25,14 +37,16 @@ const Cart = () => {
         <Typography>Your cart is empty</Typography>
       ) : (
         <Paper sx={{ p: 2 }}>
-          {cart.map((item) => (
+          {cart.map(item => (
             <Box key={item.id} sx={{ mb: 2 }}>
               <Typography>
-                {item.name} × {item.qty}
+                {item.product_name} × {item.qty}
               </Typography>
+
               <Typography>
                 ₹{item.price * item.qty}
               </Typography>
+
               <Divider sx={{ my: 1 }} />
             </Box>
           ))}

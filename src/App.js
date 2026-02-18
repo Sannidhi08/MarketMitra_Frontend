@@ -9,6 +9,7 @@ import Login from "./auth/Login";
 import Register from "./auth/Register";
 import About from "./public/About";
 import Contact from "./public/Contact";
+import Jobs from "./public/ViewJobs"
 
 /* -------- DASHBOARDS -------- */
 import AdminLayout from "./admin/AdminLayout";
@@ -35,6 +36,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles" element={<PublicArticles />} />
+          <Route path="/jobs" element={<Jobs />} />
         </Route>
 
         {/* -------- USER DASHBOARD -------- */}

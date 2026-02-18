@@ -33,24 +33,54 @@ const Login = () => {
 
       if (!success) {
         setError(message || "Login failed");
+        setLoading(false);
         return;
       }
 
-      // ⛔ BLOCK FARMER IF NOT ACTIVE
+      /* 🚫 BLOCK FARMER IF NOT APPROVED */
       if (user.role === "farmer" && user.status !== "approved") {
-  setError("Your farmer account is pending admin approval.");
-  return;
-}
+        setError("Your farmer account is pending admin approval.");
+        setLoading(false);
+        return;
+      }
 
+      /* ✅ SAVE LOGIN DATA */
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", user.id);
+      localStorage.setItem("role", user.role);
+      localStorage.setItem("user", JSON.stringify(user));
 
-      // ✅ SAVE REQUIRED DATA ONLY
-localStorage.setItem("token", token);
-localStorage.setItem("userId", user.id);   // ✅ FIX
-localStorage.setItem("user", JSON.stringify(user));
-localStorage.setItem("role", user.role);
+      /* 🛒 MERGE GUEST CART → USER CART */
+      const guestCart =
+        JSON.parse(localStorage.getItem("guest_cart")) || [];
 
+      if (guestCart.length > 0) {
+        const userCartKey = `cart_${user.id}`;
+        const userCart =
+          JSON.parse(localStorage.getItem(userCartKey)) || [];
 
-      // 🔀 ROLE-BASED REDIRECT
+        const merged = [...userCart];
+
+        guestCart.forEach(g => {
+          const exist = merged.find(i => i.id === g.id);
+          if (exist) exist.qty += g.qty;
+          else merged.push(g);
+        });
+
+        localStorage.setItem(userCartKey, JSON.stringify(merged));
+        localStorage.removeItem("guest_cart");
+      }
+
+      /* 🔁 CHECK REDIRECT AFTER LOGIN */
+      const redirect = localStorage.getItem("redirectAfterLogin");
+
+      if (redirect) {
+        localStorage.removeItem("redirectAfterLogin");
+        navigate(redirect);
+        return;
+      }
+
+      /* 🔀 ROLE BASED REDIRECT */
       if (user.role === "admin") {
         navigate("/admin");
       } else if (user.role === "farmer") {
@@ -86,7 +116,6 @@ localStorage.setItem("role", user.role);
         margin="normal"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        required
       />
 
       <TextField
@@ -96,7 +125,6 @@ localStorage.setItem("role", user.role);
         margin="normal"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        required
       />
 
       <Button

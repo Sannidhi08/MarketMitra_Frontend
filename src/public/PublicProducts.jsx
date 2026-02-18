@@ -17,11 +17,12 @@ const PublicProducts = () => {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
-  const [cart, setCart] = useState([]);
+  const [showCartBtn, setShowCartBtn] = useState(false);
 
+  const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
-  /* ---------------- LOAD PRODUCTS ---------------- */
+  /* LOAD PRODUCTS */
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -38,65 +39,53 @@ const PublicProducts = () => {
       const res = await axios.get(`${API}/products/public`);
       setProducts(normalize(res.data));
     } catch (err) {
-      console.error("Product load error:", err);
-      setProducts([]);
+      console.error(err);
     }
   };
 
-  /* ---------------- LOAD CATEGORIES ---------------- */
+  /* LOAD CATEGORIES */
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
-
       const data = Array.isArray(res.data)
         ? res.data
         : res.data.categories || [];
 
-      const names = data.map(c => c.category_name);
-      setCategories(["All", ...names]);
-
+      setCategories(["All", ...data.map(c => c.category_name)]);
     } catch (err) {
-      console.error("Category load error:", err);
+      console.error(err);
     }
   };
 
-  /* ---------------- LOAD CART ---------------- */
-  useEffect(() => {
-    if (userId) {
-      const saved =
-        JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
-      setCart(saved);
-    }
-  }, [userId]);
-
-  const saveCart = updated => {
-    setCart(updated);
-    localStorage.setItem(`cart_${userId}`, JSON.stringify(updated));
-  };
-
-  /* ---------------- ADD TO CART ---------------- */
+  /* ADD TO CART */
   const addToCart = product => {
-    if (!localStorage.getItem("token")) {
-      navigate("/login");
-      return;
-    }
+    const key = token ? `cart_${userId}` : "guest_cart";
 
-    const exists = cart.find(i => i.id === product.id);
+    const existing = JSON.parse(localStorage.getItem(key)) || [];
+
+    const found = existing.find(i => i.id === product.id);
 
     let updated;
 
-    if (exists)
-      updated = cart.map(i =>
+    if (found)
+      updated = existing.map(i =>
         i.id === product.id ? { ...i, qty: i.qty + 1 } : i
       );
     else
-      updated = [...cart, { ...product, qty: 1 }];
+      updated = [...existing, { ...product, qty: 1 }];
 
-    saveCart(updated);
-    navigate("/cart");
+    localStorage.setItem(key, JSON.stringify(updated));
+
+    setShowCartBtn(true);
+
+    /* first time guest */
+    if (!token) {
+      localStorage.setItem("loginForCart", "true");
+      navigate("/login");
+    }
   };
 
-  /* ---------------- FILTER ---------------- */
+  /* FILTER */
   let filtered = (products || []).filter(p =>
     (category === "All" || p.category_name === category) &&
     (p.product_name || "")
@@ -104,11 +93,10 @@ const PublicProducts = () => {
       .includes(search.toLowerCase())
   );
 
-  /* ---------------- SORT ---------------- */
+  /* SORT */
   if (sort === "low") filtered.sort((a, b) => a.price - b.price);
   if (sort === "high") filtered.sort((a, b) => b.price - a.price);
 
-  /* ---------------- UI ---------------- */
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" textAlign="center" gutterBottom>
@@ -131,7 +119,7 @@ const PublicProducts = () => {
         </Select>
       </Stack>
 
-      {/* CATEGORY FILTER */}
+      {/* CATEGORY */}
       <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
         {categories.map(cat => (
           <Chip
@@ -144,7 +132,7 @@ const PublicProducts = () => {
         ))}
       </Stack>
 
-      {/* GRID */}
+      {/* PRODUCTS */}
       <Grid container spacing={3}>
         {filtered.map(p => (
           <Grid item xs={12} sm={6} md={4} key={p.id}>
@@ -173,9 +161,22 @@ const PublicProducts = () => {
         ))}
       </Grid>
 
-      {/* EMPTY STATE */}
+      {/* GO TO CART BUTTON */}
+      {showCartBtn && token && (
+        <Box textAlign="center" mt={4}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => navigate("/user/cart")}
+          >
+            Go To Cart
+          </Button>
+        </Box>
+      )}
+
+      {/* EMPTY */}
       {filtered.length === 0 && (
-        <Typography textAlign="center" sx={{ mt: 5 }}>
+        <Typography textAlign="center" mt={5}>
           No products found
         </Typography>
       )}
