@@ -2,17 +2,19 @@ import { Navigate } from "react-router-dom";
 
 const ProtectedFarmerRoute = ({ children }) => {
   const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
-  const status = localStorage.getItem("status");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  if (!token) return <Navigate to="/login" replace />;
-
-  if (role !== "farmer") {
+  if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (status !== "approved") {
-    return <Navigate to="/pending-approval" replace />;
+  if (user.role !== "farmer") {
+    return <Navigate to="/login" replace />;
+  }
+
+  // ✅ ONLY BLOCK IF REALLY NOT APPROVED
+  if (user.status !== "approved") {
+    return <Navigate to="/login" replace />;
   }
 
   return children;

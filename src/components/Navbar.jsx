@@ -1,10 +1,13 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
   const handleLogout = () => {
-    localStorage.clear(); // clear role and email
-    window.location.href = "/login"; // redirect to login
+    localStorage.clear();
+    navigate("/login");
   };
 
   return (
@@ -14,6 +17,20 @@ const Navbar = () => {
           Market Mitra
         </Typography>
 
+        {/* Public Links */}
+        <Button color="inherit" component={Link} to="/">
+          Home
+        </Button>
+
+        <Button color="inherit" component={Link} to="/articles">
+          Articles
+        </Button>
+
+        <Button color="inherit" component={Link} to="/contact">
+          Contact
+        </Button>
+
+        {/* Logout */}
         <Button color="inherit" onClick={handleLogout}>
           Logout
         </Button>

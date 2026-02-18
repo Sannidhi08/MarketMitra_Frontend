@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* -------- PUBLIC -------- */
 import PublicLayout from "./layouts/PublicLayout";
+import PublicArticles from "./public/PublicArticles";
 import Home from "./public/Home";
 import PublicProducts from "./public/PublicProducts";
 import Login from "./auth/Login";
@@ -33,6 +34,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/articles" element={<PublicArticles />} />
         </Route>
 
         {/* -------- USER DASHBOARD -------- */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -9,165 +9,170 @@ import {
   IconButton,
   ListItemText,
   Dialog,
-  DialogActions,
-  DialogContent,
   DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import axios from "axios";
+
+const BASE_URL = "http://localhost:3003/api/articles";
 
 const ManageArticles = () => {
+  const [articles, setArticles] = useState([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [articles, setArticles] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
 
-  // Load articles from localStorage
-  useEffect(() => {
-    const storedArticles = JSON.parse(localStorage.getItem("articles")) || [];
-    setArticles(storedArticles);
-  }, []);
+  const adminId = localStorage.getItem("userId");
 
-  // Save articles to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("articles", JSON.stringify(articles));
-  }, [articles]);
+  /* FETCH ARTICLES */
+  const fetchArticles = async () => {
+    const res = await axios.get(BASE_URL);
+    setArticles(res.data.articles || []);
+  };
 
-  // Add new article
-  const handleAdd = () => {
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    if (!trimmedTitle || !trimmedContent) {
-      alert("Please enter both title and content.");
+  /* ADD ARTICLE */
+  const handleAdd = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("Title and content required");
       return;
     }
 
-    const newArticle = { title: trimmedTitle, content: trimmedContent };
-    setArticles([...articles, newArticle]);
+    setLoading(true);
+    await axios.post(
+      `${BASE_URL}/add`,
+      { title, content },
+      { headers: { "x-user-id": adminId } }
+    );
+
     setTitle("");
     setContent("");
+    fetchArticles();
+    setLoading(false);
   };
 
-  // Open edit dialog
-  const handleEdit = (index) => {
-    setEditIndex(index);
-    setEditTitle(articles[index].title);
-    setEditContent(articles[index].content);
-    setOpenDialog(true);
+  /* OPEN EDIT */
+  const openEdit = (article) => {
+    setEditId(article.id);
+    setEditTitle(article.title);
+    setEditContent(article.content);
+    setOpen(true);
   };
 
-  // Save edited article
-  const handleSaveEdit = () => {
-    const trimmedTitle = editTitle.trim();
-    const trimmedContent = editContent.trim();
+  /* SAVE EDIT */
+  const saveEdit = async () => {
+    await axios.put(
+      `${BASE_URL}/update/${editId}`,
+      { title: editTitle, content: editContent },
+      { headers: { "x-user-id": adminId } }
+    );
 
-    if (!trimmedTitle || !trimmedContent) {
-      alert("Title and content cannot be empty.");
-      return;
-    }
-
-    const updatedArticles = [...articles];
-    updatedArticles[editIndex] = { title: trimmedTitle, content: trimmedContent };
-    setArticles(updatedArticles);
-
-    setOpenDialog(false);
-    setEditIndex(null);
-    setEditTitle("");
-    setEditContent("");
+    setOpen(false);
+    fetchArticles();
   };
 
-  // Delete article
-  const handleDelete = (index) => {
-    const updatedArticles = articles.filter((_, i) => i !== index);
-    setArticles(updatedArticles);
+  /* DELETE */
+  const remove = async (id) => {
+    if (!window.confirm("Delete this article?")) return;
+
+    await axios.delete(`${BASE_URL}/delete/${id}`, {
+      headers: { "x-user-id": adminId }
+    });
+
+    fetchArticles();
   };
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
 
   return (
-    <Paper sx={{ padding: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Manage Articles
-      </Typography>
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h5">Manage Articles</Typography>
 
-      {/* Add Article */}
       <TextField
         label="Article Title"
         fullWidth
-        margin="normal"
+        sx={{ mt: 2 }}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
+
       <TextField
         label="Article Content"
         fullWidth
         multiline
         rows={4}
-        margin="normal"
+        sx={{ mt: 2 }}
         value={content}
         onChange={(e) => setContent(e.target.value)}
       />
-      <Button variant="contained" onClick={handleAdd} sx={{ mb: 2 }}>
-        Add Article
+
+      <Button
+        variant="contained"
+        sx={{ mt: 2 }}
+        onClick={handleAdd}
+        disabled={loading}
+      >
+        {loading ? <CircularProgress size={20} /> : "Add Article"}
       </Button>
 
-      {/* Articles List */}
-      <Typography variant="h6" gutterBottom>
-        Articles List
-      </Typography>
-      {articles.length === 0 ? (
-        <Typography>No articles added yet.</Typography>
-      ) : (
-        <List>
-          {articles.map((article, index) => (
-            <ListItem
-              key={index}
-              secondaryAction={
-                <>
-                  <IconButton edge="end" onClick={() => handleEdit(index)} sx={{ mr: 1 }}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton edge="end" onClick={() => handleDelete(index)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </>
-              }
-            >
-              <ListItemText
-                primary={article.title}
-                secondary={article.content.length > 50 ? article.content.substring(0, 50) + "..." : article.content}
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <List sx={{ mt: 4 }}>
+        {articles.map((a) => (
+          <ListItem
+            key={a.id}
+            divider
+            secondaryAction={
+              <>
+                <IconButton onClick={() => openEdit(a)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => remove(a.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </>
+            }
+          >
+            <ListItemText
+              primary={a.title}
+              secondary={a.content.slice(0, 80) + "..."}
+            />
+          </ListItem>
+        ))}
+      </List>
 
-      {/* Edit Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      {/* EDIT DIALOG */}
+      <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Edit Article</DialogTitle>
         <DialogContent>
           <TextField
-            label="Article Title"
+            label="Title"
             fullWidth
-            margin="normal"
+            sx={{ mt: 1 }}
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
           />
           <TextField
-            label="Article Content"
+            label="Content"
             fullWidth
             multiline
             rows={4}
-            margin="normal"
+            sx={{ mt: 2 }}
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveEdit}>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={saveEdit}>
             Save
           </Button>
         </DialogActions>

@@ -49,6 +49,10 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
             About
           </Button>
 
+          <Button color="inherit" component={Link} to="/articles">
+            Articles
+          </Button>
+
           <Button color="inherit" component={Link} to="/contact">
             Contact
           </Button>

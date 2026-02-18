@@ -1,57 +1,19 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
-  Chip,
-  Stack,
-  TextField,
-  Select,
-  MenuItem
+  Box, Grid, Card, CardContent, CardMedia,
+  Typography, Button, Chip, Stack,
+  TextField, Select, MenuItem
 } from "@mui/material";
 
-/* ------------------ DATA ------------------ */
-
-const categories = ["All", "Vegetables", "Fruits", "Grains"];
-
-const productsData = [
-  {
-    id: 1,
-    name: "Fresh Tomato",
-    price: 30,
-    quantity: "1 Kg",
-    category: "Vegetables",
-    description: "Fresh organic tomatoes",
-    image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
-  },
-  {
-    id: 2,
-    name: "Potato",
-    price: 25,
-    quantity: "1 Kg",
-    category: "Vegetables",
-    description: "Healthy farm potatoes",
-    image: "https://images.unsplash.com/photo-1582515073490-dc84f45b6e4b"
-  },
-  {
-    id: 3,
-    name: "Apple",
-    price: 120,
-    quantity: "1 Kg",
-    category: "Fruits",
-    description: "Sweet red apples",
-    image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
-  }
-];
+const API = "http://localhost:3003";
 
 const PublicProducts = () => {
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(["All"]);
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
@@ -59,77 +21,119 @@ const PublicProducts = () => {
 
   const userId = localStorage.getItem("userId");
 
+  /* ---------------- LOAD PRODUCTS ---------------- */
+  useEffect(() => {
+    loadProducts();
+    loadCategories();
+  }, []);
+
+  const normalize = data => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.products)) return data.products;
+    return [];
+  };
+
+  const loadProducts = async () => {
+    try {
+      const res = await axios.get(`${API}/products/public`);
+      setProducts(normalize(res.data));
+    } catch (err) {
+      console.error("Product load error:", err);
+      setProducts([]);
+    }
+  };
+
+  /* ---------------- LOAD CATEGORIES ---------------- */
+  const loadCategories = async () => {
+    try {
+      const res = await axios.get(`${API}/api/categories`);
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.categories || [];
+
+      const names = data.map(c => c.category_name);
+      setCategories(["All", ...names]);
+
+    } catch (err) {
+      console.error("Category load error:", err);
+    }
+  };
+
+  /* ---------------- LOAD CART ---------------- */
   useEffect(() => {
     if (userId) {
-      const savedCart =
+      const saved =
         JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
-      setCart(savedCart);
+      setCart(saved);
     }
   }, [userId]);
 
-  const saveCart = (updatedCart) => {
-    setCart(updatedCart);
-    localStorage.setItem(`cart_${userId}`, JSON.stringify(updatedCart));
+  const saveCart = updated => {
+    setCart(updated);
+    localStorage.setItem(`cart_${userId}`, JSON.stringify(updated));
   };
 
-  const addToCart = (product) => {
+  /* ---------------- ADD TO CART ---------------- */
+  const addToCart = product => {
     if (!localStorage.getItem("token")) {
       navigate("/login");
       return;
     }
 
-    const exists = cart.find((item) => item.id === product.id);
+    const exists = cart.find(i => i.id === product.id);
 
-    let updatedCart;
-    if (exists) {
-      updatedCart = cart.map((item) =>
-        item.id === product.id
-          ? { ...item, qty: item.qty + 1 }
-          : item
+    let updated;
+
+    if (exists)
+      updated = cart.map(i =>
+        i.id === product.id ? { ...i, qty: i.qty + 1 } : i
       );
-    } else {
-      updatedCart = [...cart, { ...product, qty: 1 }];
-    }
+    else
+      updated = [...cart, { ...product, qty: 1 }];
 
-    saveCart(updatedCart);
-    navigate("/cart"); // optional: auto open cart
+    saveCart(updated);
+    navigate("/cart");
   };
 
-  let filteredProducts = productsData.filter(
-    (p) =>
-      (category === "All" || p.category === category) &&
-      p.name.toLowerCase().includes(search.toLowerCase())
+  /* ---------------- FILTER ---------------- */
+  let filtered = (products || []).filter(p =>
+    (category === "All" || p.category_name === category) &&
+    (p.product_name || "")
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
-  if (sort === "low") filteredProducts.sort((a, b) => a.price - b.price);
-  if (sort === "high") filteredProducts.sort((a, b) => b.price - a.price);
+  /* ---------------- SORT ---------------- */
+  if (sort === "low") filtered.sort((a, b) => a.price - b.price);
+  if (sort === "high") filtered.sort((a, b) => b.price - a.price);
 
+  /* ---------------- UI ---------------- */
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Products
       </Typography>
 
+      {/* SEARCH + SORT */}
       <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <TextField
           fullWidth
           label="Search products"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
         />
-        <Select
-          value={sort}
-          displayEmpty
-          onChange={(e) => setSort(e.target.value)}
-        >
+
+        <Select value={sort} displayEmpty onChange={e => setSort(e.target.value)}>
           <MenuItem value="">Sort by Price</MenuItem>
-          <MenuItem value="low">Low to High</MenuItem>
-          <MenuItem value="high">High to Low</MenuItem>
+          <MenuItem value="low">Low → High</MenuItem>
+          <MenuItem value="high">High → Low</MenuItem>
         </Select>
       </Stack>
 
+      {/* CATEGORY FILTER */}
       <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
-        {categories.map((cat) => (
+        {categories.map(cat => (
           <Chip
             key={cat}
             label={cat}
@@ -140,14 +144,21 @@ const PublicProducts = () => {
         ))}
       </Stack>
 
+      {/* GRID */}
       <Grid container spacing={3}>
-        {filteredProducts.map((p) => (
+        {filtered.map(p => (
           <Grid item xs={12} sm={6} md={4} key={p.id}>
             <Card>
-              <CardMedia component="img" height="160" image={p.image} />
+              <CardMedia
+                component="img"
+                height="160"
+                image={p.image || "https://via.placeholder.com/300"}
+              />
+
               <CardContent>
-                <Typography variant="h6">{p.name}</Typography>
-                <Typography>₹{p.price}</Typography>
+                <Typography variant="h6">{p.product_name}</Typography>
+                <Typography>₹ {p.price}</Typography>
+
                 <Button
                   variant="contained"
                   fullWidth
@@ -161,6 +172,13 @@ const PublicProducts = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* EMPTY STATE */}
+      {filtered.length === 0 && (
+        <Typography textAlign="center" sx={{ mt: 5 }}>
+          No products found
+        </Typography>
+      )}
     </Box>
   );
 };
