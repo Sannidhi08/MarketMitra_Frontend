@@ -17,12 +17,14 @@ const PublicProducts = () => {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
-  const [showCartBtn, setShowCartBtn] = useState(false);
+
+  // stores id of product added recently
+  const [addedProductId, setAddedProductId] = useState(null);
 
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
-  /* LOAD PRODUCTS */
+  /* ---------------- LOAD PRODUCTS ---------------- */
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -43,7 +45,7 @@ const PublicProducts = () => {
     }
   };
 
-  /* LOAD CATEGORIES */
+  /* ---------------- LOAD CATEGORIES ---------------- */
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
@@ -57,7 +59,7 @@ const PublicProducts = () => {
     }
   };
 
-  /* ADD TO CART */
+  /* ---------------- ADD TO CART ---------------- */
   const addToCart = product => {
     const key = token ? `cart_${userId}` : "guest_cart";
 
@@ -67,25 +69,27 @@ const PublicProducts = () => {
 
     let updated;
 
-    if (found)
+    if (found) {
       updated = existing.map(i =>
         i.id === product.id ? { ...i, qty: i.qty + 1 } : i
       );
-    else
+    } else {
       updated = [...existing, { ...product, qty: 1 }];
+    }
 
     localStorage.setItem(key, JSON.stringify(updated));
 
-    setShowCartBtn(true);
+    // show Go To Cart only for clicked product
+    setAddedProductId(product.id);
 
-    /* first time guest */
+    /* if not logged in → open login page */
     if (!token) {
-      localStorage.setItem("loginForCart", "true");
+      localStorage.setItem("redirectAfterLogin", "/products");
       navigate("/login");
     }
   };
 
-  /* FILTER */
+  /* ---------------- FILTER ---------------- */
   let filtered = (products || []).filter(p =>
     (category === "All" || p.category_name === category) &&
     (p.product_name || "")
@@ -93,9 +97,11 @@ const PublicProducts = () => {
       .includes(search.toLowerCase())
   );
 
-  /* SORT */
+  /* ---------------- SORT ---------------- */
   if (sort === "low") filtered.sort((a, b) => a.price - b.price);
   if (sort === "high") filtered.sort((a, b) => b.price - a.price);
+
+  /* ---------------- UI ---------------- */
 
   return (
     <Box sx={{ p: 3 }}>
@@ -119,7 +125,7 @@ const PublicProducts = () => {
         </Select>
       </Stack>
 
-      {/* CATEGORY */}
+      {/* CATEGORY FILTER */}
       <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
         {categories.map(cat => (
           <Chip
@@ -132,7 +138,7 @@ const PublicProducts = () => {
         ))}
       </Stack>
 
-      {/* PRODUCTS */}
+      {/* PRODUCTS GRID */}
       <Grid container spacing={3}>
         {filtered.map(p => (
           <Grid item xs={12} sm={6} md={4} key={p.id}>
@@ -147,32 +153,32 @@ const PublicProducts = () => {
                 <Typography variant="h6">{p.product_name}</Typography>
                 <Typography>₹ {p.price}</Typography>
 
-                <Button
-                  variant="contained"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  onClick={() => addToCart(p)}
-                >
-                  Add to Cart
-                </Button>
+                {/* BUTTON SWITCH */}
+                {addedProductId === p.id ? (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                    onClick={() => navigate("/user/cart")}
+                  >
+                    Go To Cart
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                    onClick={() => addToCart(p)}
+                  >
+                    Add to Cart
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
-
-      {/* GO TO CART BUTTON */}
-      {showCartBtn && token && (
-        <Box textAlign="center" mt={4}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => navigate("/user/cart")}
-          >
-            Go To Cart
-          </Button>
-        </Box>
-      )}
 
       {/* EMPTY */}
       {filtered.length === 0 && (

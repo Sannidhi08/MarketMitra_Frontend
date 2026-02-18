@@ -5,6 +5,7 @@ import {
   Typography,
   Paper,
   Box,
+  CircularProgress
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/api";
@@ -20,7 +21,8 @@ const Login = () => {
   const handleLogin = async () => {
     setError("");
 
-    if (!email || !password) {
+    /* VALIDATION */
+    if (!email.trim() || !password.trim()) {
       setError("Email and password are required");
       return;
     }
@@ -28,29 +30,33 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await loginUser({ email, password });
-      const { success, user, token, message } = response.data;
+      const res = await loginUser({ email, password });
+      const { success, user, token, message } = res.data;
 
+      /* LOGIN FAILED */
       if (!success) {
         setError(message || "Login failed");
         setLoading(false);
         return;
       }
 
-      /* 🚫 BLOCK FARMER IF NOT APPROVED */
+      /* FARMER APPROVAL CHECK */
       if (user.role === "farmer" && user.status !== "approved") {
         setError("Your farmer account is pending admin approval.");
         setLoading(false);
         return;
       }
 
-      /* ✅ SAVE LOGIN DATA */
+      /* SAVE LOGIN DATA */
       localStorage.setItem("token", token);
       localStorage.setItem("userId", user.id);
       localStorage.setItem("role", user.role);
       localStorage.setItem("user", JSON.stringify(user));
 
-      /* 🛒 MERGE GUEST CART → USER CART */
+      /* ---------------------------- */
+      /* MERGE GUEST CART → USER CART */
+      /* ---------------------------- */
+
       const guestCart =
         JSON.parse(localStorage.getItem("guest_cart")) || [];
 
@@ -59,47 +65,67 @@ const Login = () => {
         const userCart =
           JSON.parse(localStorage.getItem(userCartKey)) || [];
 
-        const merged = [...userCart];
+        const mergedCart = [...userCart];
 
-        guestCart.forEach(g => {
-          const exist = merged.find(i => i.id === g.id);
-          if (exist) exist.qty += g.qty;
-          else merged.push(g);
+        guestCart.forEach(item => {
+          const exists = mergedCart.find(i => i.id === item.id);
+
+          if (exists) exists.qty += item.qty;
+          else mergedCart.push(item);
         });
 
-        localStorage.setItem(userCartKey, JSON.stringify(merged));
+        localStorage.setItem(userCartKey, JSON.stringify(mergedCart));
         localStorage.removeItem("guest_cart");
       }
 
-      /* 🔁 CHECK REDIRECT AFTER LOGIN */
-      const redirect = localStorage.getItem("redirectAfterLogin");
+      /* ---------------------------- */
+      /* REDIRECT BACK AFTER LOGIN */
+      /* ---------------------------- */
 
-      if (redirect) {
+      const redirectPath = localStorage.getItem("redirectAfterLogin");
+
+      if (redirectPath) {
         localStorage.removeItem("redirectAfterLogin");
-        navigate(redirect);
+        navigate(redirectPath);
         return;
       }
 
-      /* 🔀 ROLE BASED REDIRECT */
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else if (user.role === "farmer") {
-        navigate("/farmer");
-      } else {
-        navigate("/user");
-      }
+      /* ---------------------------- */
+      /* ROLE BASED NAVIGATION */
+      /* ---------------------------- */
+
+      if (user.role === "admin") navigate("/admin");
+      else if (user.role === "farmer") navigate("/farmer");
+      else navigate("/user");
 
     } catch (err) {
-      console.error("❌ Login error:", err);
-      setError(err.response?.data?.message || "Invalid email or password");
+      console.error(err);
+      setError(
+        err.response?.data?.message ||
+        "Invalid email or password"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  /* ENTER KEY LOGIN */
+  const handleKeyPress = e => {
+    if (e.key === "Enter") handleLogin();
+  };
+
   return (
-    <Paper sx={{ p: 3, maxWidth: 400, margin: "auto", mt: 8 }}>
-      <Typography variant="h5" gutterBottom>
+    <Paper
+      elevation={4}
+      sx={{
+        p: 4,
+        maxWidth: 400,
+        margin: "auto",
+        mt: 10,
+        borderRadius: 3
+      }}
+    >
+      <Typography variant="h5" gutterBottom textAlign="center">
         Login
       </Typography>
 
@@ -115,7 +141,8 @@ const Login = () => {
         fullWidth
         margin="normal"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={e => setEmail(e.target.value)}
+        onKeyDown={handleKeyPress}
       />
 
       <TextField
@@ -124,17 +151,18 @@ const Login = () => {
         fullWidth
         margin="normal"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={e => setPassword(e.target.value)}
+        onKeyDown={handleKeyPress}
       />
 
       <Button
         variant="contained"
         fullWidth
-        sx={{ mt: 2 }}
+        sx={{ mt: 2, height: 45 }}
         onClick={handleLogin}
         disabled={loading}
       >
-        {loading ? "Logging in..." : "Login"}
+        {loading ? <CircularProgress size={24} /> : "Login"}
       </Button>
 
       <Box sx={{ mt: 2, textAlign: "center" }}>
