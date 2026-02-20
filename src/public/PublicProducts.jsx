@@ -17,14 +17,11 @@ const PublicProducts = () => {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
-
-  // stores id of product added recently
   const [addedProductId, setAddedProductId] = useState(null);
 
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
-  /* ---------------- LOAD PRODUCTS ---------------- */
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -45,7 +42,6 @@ const PublicProducts = () => {
     }
   };
 
-  /* ---------------- LOAD CATEGORIES ---------------- */
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
@@ -59,10 +55,9 @@ const PublicProducts = () => {
     }
   };
 
-  /* ---------------- ADD TO CART ---------------- */
+  /* ADD TO CART */
   const addToCart = product => {
     const key = token ? `cart_${userId}` : "guest_cart";
-
     const existing = JSON.parse(localStorage.getItem(key)) || [];
 
     const found = existing.find(i => i.id === product.id);
@@ -79,17 +74,17 @@ const PublicProducts = () => {
 
     localStorage.setItem(key, JSON.stringify(updated));
 
-    // show Go To Cart only for clicked product
+    /* 🔥 notify navbar instantly */
+    window.dispatchEvent(new Event("cartUpdated"));
+
     setAddedProductId(product.id);
 
-    /* if not logged in → open login page */
     if (!token) {
       localStorage.setItem("redirectAfterLogin", "/products");
       navigate("/login");
     }
   };
 
-  /* ---------------- FILTER ---------------- */
   let filtered = (products || []).filter(p =>
     (category === "All" || p.category_name === category) &&
     (p.product_name || "")
@@ -97,11 +92,8 @@ const PublicProducts = () => {
       .includes(search.toLowerCase())
   );
 
-  /* ---------------- SORT ---------------- */
   if (sort === "low") filtered.sort((a, b) => a.price - b.price);
   if (sort === "high") filtered.sort((a, b) => b.price - a.price);
-
-  /* ---------------- UI ---------------- */
 
   return (
     <Box sx={{ p: 3 }}>
@@ -109,7 +101,6 @@ const PublicProducts = () => {
         Products
       </Typography>
 
-      {/* SEARCH + SORT */}
       <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <TextField
           fullWidth
@@ -125,7 +116,6 @@ const PublicProducts = () => {
         </Select>
       </Stack>
 
-      {/* CATEGORY FILTER */}
       <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
         {categories.map(cat => (
           <Chip
@@ -138,7 +128,6 @@ const PublicProducts = () => {
         ))}
       </Stack>
 
-      {/* PRODUCTS GRID */}
       <Grid container spacing={3}>
         {filtered.map(p => (
           <Grid item xs={12} sm={6} md={4} key={p.id}>
@@ -153,7 +142,6 @@ const PublicProducts = () => {
                 <Typography variant="h6">{p.product_name}</Typography>
                 <Typography>₹ {p.price}</Typography>
 
-                {/* BUTTON SWITCH */}
                 {addedProductId === p.id ? (
                   <Button
                     variant="contained"
@@ -180,7 +168,6 @@ const PublicProducts = () => {
         ))}
       </Grid>
 
-      {/* EMPTY */}
       {filtered.length === 0 && (
         <Typography textAlign="center" mt={5}>
           No products found

@@ -3,24 +3,20 @@ import axios from "axios";
 /* ================= AXIOS INSTANCE ================= */
 
 const API = axios.create({
-  baseURL: "http://localhost:3003",
+  baseURL: "http://localhost:3003/api", // ✅ FIXED BASE URL
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-/* ================= ATTACH USER ID (IMPORTANT) ================= */
-/*
-  We store logged-in user in localStorage as:
-  localStorage.setItem("user", JSON.stringify(user))
-*/
+/* ================= ATTACH USER ID ================= */
 
 API.interceptors.request.use(
   (config) => {
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if (user && user.id) {
-      config.headers["x-user-id"] = user.id; // 🔑 used by adminMiddleware
+    if (user?.id) {
+      config.headers["x-user-id"] = user.id;
     }
 
     return config;
@@ -32,6 +28,18 @@ API.interceptors.request.use(
 
 export const loginUser = (data) => API.post("/auth/login", data);
 export const registerUser = (data) => API.post("/auth/register", data);
+export const forgotPassword = (data) =>
+  API.post("/auth/forgot-password", data);
+
+/* ================= USERS ================= */
+
+export const getUsers = () => API.get("/admin/users"); // matches backend route
+
+export const updateUser = (id, data) =>
+  API.put(`/users/update/${id}`, data);
+
+export const deleteUser = (id) =>
+  API.delete(`/users/delete/${id}`);
 
 /* ================= CATEGORIES ================= */
 
@@ -42,22 +50,7 @@ export const updateCategory = (id, data) =>
 export const deleteCategory = (id) =>
   API.delete(`/categories/delete/${id}`);
 
-/* ================= USERS (ADMIN ONLY) ================= */
-/*
-  Backend will check:
-  - x-user-id exists
-  - user role === 'admin'
-*/
-
-export const getUsers = () => API.get("/users");
-
-export const updateUser = (id, data) =>
-  API.put(`/users/update/${id}`, data);
-
-export const deleteUser = (id) =>
-  API.delete(`/users/delete/${id}`);
-
-/* ================= PRODUCTS (FARMER) ================= */
+/* ================= PRODUCTS ================= */
 
 export const addProduct = (data) => API.post("/products/add", data);
 export const getProducts = () => API.get("/products");

@@ -1,37 +1,50 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
-  Typography, Paper, Box,
-  CircularProgress, Divider, Chip
+  Typography,
+  Paper,
+  Box,
+  CircularProgress,
+  Stack,
+  Divider
 } from "@mui/material";
+import axios from "axios";
 
-const API = "http://localhost:3003";
+const API = "http://localhost:3003/orders";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userId = localStorage.getItem("userId");
+  const userId = JSON.parse(localStorage.getItem("user"))?.id;
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    const loadOrders = async () => {
+      try {
+        if (!userId) return;
 
-  const loadOrders = async () => {
-    try {
-      const res = await axios.get(`${API}/orders/${userId}`);
-      setOrders(res.data.orders || []);
-    } catch (err) {
-      console.error(err);
-      setOrders([]);
-    }
-    setLoading(false);
-  };
+        const res = await axios.get(`${API}/user/${userId}`);
+        setOrders(res.data.orders || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [userId]);
 
   if (loading)
     return (
       <Box textAlign="center" mt={5}>
         <CircularProgress />
+      </Box>
+    );
+
+  if (!orders.length)
+    return (
+      <Box textAlign="center" mt={5}>
+        <Typography>No orders yet</Typography>
       </Box>
     );
 
@@ -41,51 +54,34 @@ const Orders = () => {
         My Orders
       </Typography>
 
-      {orders.length === 0 && (
-        <Typography>No orders yet</Typography>
-      )}
-
-      {orders.map(order => (
+      {orders.map((order) => (
         <Paper key={order.id} sx={{ p: 3, mb: 3 }}>
-
-          {/* HEADER */}
-          <Box display="flex" justifyContent="space-between">
-            <Typography>
-              <b>Order ID:</b> {order.id}
-            </Typography>
-
-            <Chip
-              label={order.status}
-              color={
-                order.status === "pending" ? "warning" :
-                order.status === "paid" ? "info" :
-                order.status === "shipped" ? "secondary" :
-                order.status === "delivered" ? "success" :
-                "error"
-              }
-            />
-          </Box>
+          <Typography><b>Order ID:</b> {order.id}</Typography>
 
           <Typography mt={1}>
-            Date: {new Date(order.created_at).toLocaleString()}
+            <b>Date:</b> {new Date(order.created_at).toLocaleString()}
           </Typography>
 
           <Divider sx={{ my: 2 }} />
 
-          {/* ITEMS */}
-          {order.items.map(item => (
-            <Box key={item.id}>
-              {item.product_name} — ₹{item.price} × {item.quantity}
-            </Box>
-          ))}
+          <Stack spacing={1}>
+            {order.items.map((item) => (
+              <Box key={item.id} display="flex" justifyContent="space-between">
+                <Typography>
+                  {item.product_name} × {item.quantity}
+                </Typography>
+                <Typography>
+                  ₹{item.price * item.quantity}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
 
           <Divider sx={{ my: 2 }} />
 
-          {/* TOTAL */}
           <Typography variant="h6">
             Total: ₹ {order.total_amount}
           </Typography>
-
         </Paper>
       ))}
     </Box>

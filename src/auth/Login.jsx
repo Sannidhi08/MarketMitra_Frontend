@@ -36,14 +36,12 @@ const Login = () => {
       /* LOGIN FAILED */
       if (!success) {
         setError(message || "Login failed");
-        setLoading(false);
         return;
       }
 
       /* FARMER APPROVAL CHECK */
       if (user.role === "farmer" && user.status !== "approved") {
         setError("Your farmer account is pending admin approval.");
-        setLoading(false);
         return;
       }
 
@@ -52,6 +50,12 @@ const Login = () => {
       localStorage.setItem("userId", user.id);
       localStorage.setItem("role", user.role);
       localStorage.setItem("user", JSON.stringify(user));
+       if (user.role === "farmer") {
+  localStorage.setItem("farmerId", user.id);
+}
+
+      /* 🔥 NOTIFY NAVBAR LOGIN SUCCESS */
+      window.dispatchEvent(new Event("authChanged"));
 
       /* ---------------------------- */
       /* MERGE GUEST CART → USER CART */
@@ -76,6 +80,9 @@ const Login = () => {
 
         localStorage.setItem(userCartKey, JSON.stringify(mergedCart));
         localStorage.removeItem("guest_cart");
+
+        /* 🔥 NOTIFY NAVBAR CART UPDATED */
+        window.dispatchEvent(new Event("cartUpdated"));
       }
 
       /* ---------------------------- */
@@ -154,6 +161,14 @@ const Login = () => {
         onChange={e => setPassword(e.target.value)}
         onKeyDown={handleKeyPress}
       />
+
+      <Button
+  onClick={() => navigate("/forgot-password")}
+  sx={{ textTransform:"none", mt:1 }}
+>
+  Forgot Password?
+</Button>
+
 
       <Button
         variant="contained"

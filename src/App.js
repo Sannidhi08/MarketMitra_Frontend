@@ -10,6 +10,7 @@ import Register from "./auth/Register";
 import About from "./public/About";
 import Contact from "./public/Contact";
 import Jobs from "./public/ViewJobs"
+import ForgotPassword from "./auth/ForgotPassword";
 
 /* -------- DASHBOARDS -------- */
 import AdminLayout from "./admin/AdminLayout";
@@ -37,6 +38,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles" element={<PublicArticles />} />
           <Route path="/jobs" element={<Jobs />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
         {/* -------- USER DASHBOARD -------- */}
