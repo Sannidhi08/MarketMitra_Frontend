@@ -17,6 +17,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [phone, setPhone] = useState("");   // ✅ NEW STATE
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -31,8 +32,11 @@ const Register = () => {
       return;
     }
 
-    // ✅ SET STATUS BASED ON ROLE
-    const status = role === "farmer" ? "pending" : "approved";
+    // ✅ Require phone if farmer
+    if (role === "farmer" && !phone) {
+      setError("Phone number is required for farmers");
+      return;
+    }
 
     try {
       await registerUser({
@@ -40,7 +44,7 @@ const Register = () => {
         email,
         password,
         role,
-        status,
+        phone: role === "farmer" ? phone : null, // send only for farmer
       });
 
       if (role === "farmer") {
@@ -55,6 +59,7 @@ const Register = () => {
       setEmail("");
       setPassword("");
       setRole("user");
+      setPhone("");
 
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
@@ -86,7 +91,6 @@ const Register = () => {
         margin="normal"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        required
       />
 
       <TextField
@@ -96,7 +100,6 @@ const Register = () => {
         margin="normal"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        required
       />
 
       <TextField
@@ -106,10 +109,9 @@ const Register = () => {
         margin="normal"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        required
       />
 
-      <FormControl fullWidth margin="normal" required>
+      <FormControl fullWidth margin="normal">
         <InputLabel>Role</InputLabel>
         <Select
           value={role}
@@ -120,6 +122,17 @@ const Register = () => {
           <MenuItem value="farmer">Farmer (Seller)</MenuItem>
         </Select>
       </FormControl>
+
+      {/* ✅ PHONE FIELD ONLY FOR FARMER */}
+      {role === "farmer" && (
+        <TextField
+          label="Phone Number"
+          fullWidth
+          margin="normal"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      )}
 
       {role === "farmer" && (
         <Typography

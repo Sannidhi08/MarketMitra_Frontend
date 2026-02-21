@@ -59,10 +59,8 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
         <Box sx={{ flexGrow: 1 }}>
           <Button color="inherit" component={Link} to="/">Home</Button>
           <Button color="inherit" component={Link} to="/products">Products</Button>
-          <Button color="inherit" component={Link} to="/about">About</Button>
           <Button color="inherit" component={Link} to="/articles">Articles</Button>
           <Button color="inherit" component={Link} to="/jobs">Jobs</Button>
-          <Button color="inherit" component={Link} to="/contact">Contact</Button>
         </Box>
 
         <IconButton color="inherit" onClick={handleCartClick}>

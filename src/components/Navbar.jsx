@@ -69,7 +69,6 @@ const Navbar = () => {
         <Button color="inherit" component={Link} to="/">Home</Button>
         <Button color="inherit" component={Link} to="/articles">Articles</Button>
         <Button color="inherit" component={Link} to="/jobs">Jobs</Button>
-        <Button color="inherit" component={Link} to="/contact">Contact</Button>
 
         <IconButton color="inherit" onClick={handleCartClick}>
           <Badge badgeContent={cartCount} color="error">

@@ -7,7 +7,7 @@ import Home from "./public/Home";
 import PublicProducts from "./public/PublicProducts";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
-import About from "./public/About";
+
 import Contact from "./public/Contact";
 import Jobs from "./public/ViewJobs"
 import ForgotPassword from "./auth/ForgotPassword";
@@ -34,7 +34,7 @@ function App() {
           <Route path="/products" element={<PublicProducts />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/about" element={<About />} />
+          
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles" element={<PublicArticles />} />
           <Route path="/jobs" element={<Jobs />} />

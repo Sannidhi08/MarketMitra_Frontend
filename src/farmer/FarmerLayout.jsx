@@ -7,7 +7,7 @@ import ManageProducts from "./ManageProducts";
 import ViewOrders from "./ViewOrders";
 import ViewArticles from "./ViewArticles";
 import ManageJobs from "./ManageJobs";
-import ChangePassword from "./ChangePassword";
+
 
 // Sidebar link styling
 const linkStyle = ({ isActive }) => ({
@@ -57,9 +57,7 @@ const FarmerLayout = () => {
           <Button component={NavLink} to="/farmer/jobs" style={linkStyle}>
             Jobs
           </Button>
-          <Button component={NavLink} to="/farmer/change-password" style={linkStyle}>
-            Change Password
-          </Button>
+          
         </Paper>
 
         {/* Main Content */}
@@ -72,7 +70,7 @@ const FarmerLayout = () => {
             <Route path="orders" element={<ViewOrders />} />
             <Route path="articles" element={<ViewArticles />} />
             <Route path="jobs" element={<ManageJobs />} />
-            <Route path="change-password" element={<ChangePassword />} />
+            
           </Routes>
         </Box>
       </Box>

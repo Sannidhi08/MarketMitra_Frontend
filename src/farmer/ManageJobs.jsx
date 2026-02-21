@@ -139,11 +139,23 @@ const ManageJobs = () => {
           onChange={handleChange}
           sx={{mt:2}}/>
 
-        <TextField fullWidth label="Salary" name="salary"
-          value={form.salary}
-          onChange={handleChange}
-          sx={{mt:2}}/>
+        <TextField
+  fullWidth
+  label="Salary"
+  name="salary"
+  type="number"
+  value={form.salary}
+  onChange={(e) => {
+    const value = e.target.value;
 
+    // allow only integers >= 0
+    if (/^\d*$/.test(value)) {
+      setForm({ ...form, salary: value });
+    }
+  }}
+  inputProps={{ min: 0, step: 1 }}
+  sx={{ mt: 2 }}
+/>
         <Button variant="contained" fullWidth sx={{mt:3}}
           onClick={handlePost}>
           Post Job

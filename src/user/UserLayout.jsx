@@ -7,7 +7,7 @@ import UserDashboard from "./UserDashboard";
 import Cart from "./Cart";
 import Orders from "./Orders";
 
-import ChangePassword from "./ChangePassword";
+
 
 // Sidebar link style
 const linkStyle = ({ isActive }) => ({
@@ -53,9 +53,7 @@ const UserLayout = () => {
             Orders
           </Button>
           
-          <Button component={NavLink} to="/user/change-password" style={linkStyle}>
-            Change Password
-          </Button>
+          
         </Paper>
 
         {/* Main Content */}
@@ -67,7 +65,7 @@ const UserLayout = () => {
             <Route path="cart" element={<Cart />} />
             <Route path="orders" element={<Orders />} />
             
-            <Route path="change-password" element={<ChangePassword />} />
+           
           </Routes>
         </Box>
       </Box>

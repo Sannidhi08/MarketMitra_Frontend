@@ -17,7 +17,7 @@ import AdminDashboard from "./AdminDashboard";
 import ManageCategories from "./ManageCategories";
 import ManageUsers from "./ManageUsers";
 import ManageArticles from "./ManageArticles";
-import ChangePassword from "./ChangePassword";
+
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -32,7 +32,7 @@ const AdminLayout = () => {
     { text: "Categories", icon: <CategoryIcon />, path: "/admin/categories" },
     { text: "Users & Farmers", icon: <GroupIcon />, path: "/admin/users" },
     { text: "Articles", icon: <DescriptionIcon />, path: "/admin/articles" },
-    { text: "Security", icon: <LockResetIcon />, path: "/admin/change-password" },
+    
   ];
 
   return (
@@ -119,7 +119,7 @@ const AdminLayout = () => {
             <Route path="categories" element={<ManageCategories />} />
             <Route path="users" element={<ManageUsers />} />
             <Route path="articles" element={<ManageArticles />} />
-            <Route path="change-password" element={<ChangePassword />} />
+            
           </Routes>
         </Box>
       </Box>
