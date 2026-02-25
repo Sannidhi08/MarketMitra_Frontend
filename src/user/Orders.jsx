@@ -5,7 +5,8 @@ import {
   Box,
   CircularProgress,
   Stack,
-  Divider
+  Divider,
+  Chip,
 } from "@mui/material";
 import axios from "axios";
 
@@ -44,43 +45,69 @@ const Orders = () => {
   if (!orders.length)
     return (
       <Box textAlign="center" mt={5}>
-        <Typography>No orders yet</Typography>
+        <Typography variant="h6">No orders yet</Typography>
       </Box>
     );
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h4" fontWeight="bold" mb={3}>
         My Orders
       </Typography>
 
       {orders.map((order) => (
-        <Paper key={order.id} sx={{ p: 3, mb: 3 }}>
-          <Typography><b>Order ID:</b> {order.id}</Typography>
+        <Paper
+          key={order.id}
+          elevation={3}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 3,
+            backgroundColor: "#f9fafc",
+          }}
+        >
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography fontWeight="bold">
+              Order #{order.id}
+            </Typography>
 
-          <Typography mt={1}>
-            <b>Date:</b> {new Date(order.created_at).toLocaleString()}
+            <Chip
+              label="Completed"
+              color="success"
+              size="small"
+            />
+          </Stack>
+
+          <Typography variant="body2" mt={1}>
+            {new Date(order.created_at).toLocaleString()}
           </Typography>
 
           <Divider sx={{ my: 2 }} />
 
-          <Stack spacing={1}>
-            {order.items.map((item) => (
-              <Box key={item.id} display="flex" justifyContent="space-between">
-                <Typography>
-                  {item.product_name} × {item.quantity}
-                </Typography>
-                <Typography>
-                  ₹{item.price * item.quantity}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
+          {order.items.map((item) => (
+            <Stack
+              key={item.id}
+              direction="row"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Typography>
+                {item.product_name} × {item.quantity}
+              </Typography>
+              <Typography fontWeight="bold">
+                ₹{item.price * item.quantity}
+              </Typography>
+            </Stack>
+          ))}
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="h6">
-            Total: ₹ {order.total_amount}
+          <Typography variant="h6" textAlign="right">
+            Total: ₹{order.total_amount}
           </Typography>
         </Paper>
       ))}
@@ -89,3 +116,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

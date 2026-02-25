@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Paper, Divider, Stack, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  Stack,
+  CircularProgress,
+  Chip,
+} from "@mui/material";
 import axios from "axios";
 
 const API = "http://localhost:3003/orders";
@@ -14,7 +22,6 @@ const ViewOrders = () => {
     const loadOrders = async () => {
       try {
         if (!farmerId) return;
-
         const res = await axios.get(`${API}/farmer/${farmerId}`);
         setOrders(res.data.orders || []);
       } catch (err) {
@@ -23,28 +30,36 @@ const ViewOrders = () => {
         setLoading(false);
       }
     };
-
     loadOrders();
   }, [farmerId]);
 
+  /* ================= LOADING ================= */
   if (loading)
     return (
-      <Box textAlign="center" mt={5}>
-        <CircularProgress />
+      <Box textAlign="center" mt={6}>
+        <CircularProgress color="success" />
       </Box>
     );
 
+  /* ================= EMPTY ================= */
   if (!orders.length)
     return (
-      <Box textAlign="center" mt={5}>
-        <Typography>No orders yet</Typography>
+      <Box textAlign="center" mt={6}>
+        <Typography variant="h6" color="text.secondary">
+          No orders received yet 🌱
+        </Typography>
       </Box>
     );
 
+  /* ================= UI ================= */
   return (
-    <Box p={3}>
-      <Typography variant="h4" mb={3}>
-        Orders Received
+    <Box sx={{ p: 4, backgroundColor: "#f1f8f4", minHeight: "100vh" }}>
+      <Typography
+        variant="h4"
+        mb={3}
+        sx={{ fontWeight: 700, color: "#1b5e20" }}
+      >
+        📦 Orders Received
       </Typography>
 
       {orders.map((order) => {
@@ -57,27 +72,91 @@ const ViewOrders = () => {
         } catch {}
 
         return (
-          <Paper key={order.id} sx={{ p: 3, mb: 3 }}>
-            <Typography><b>Order ID:</b> {order.id}</Typography>
-            <Typography><b>Date:</b> {new Date(order.created_at).toLocaleString()}</Typography>
-            <Typography><b>Buyer:</b> {order.user_name} ({order.user_email})</Typography>
+          <Paper
+            key={order.id}
+            sx={{
+              p: 3,
+              mb: 3,
+              borderRadius: 3,
+              borderLeft: "6px solid #2e7d32",
+            }}
+          >
+            {/* ===== ORDER HEADER ===== */}
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              flexWrap="wrap"
+              gap={1}
+            >
+              <Typography fontWeight={600}>
+                Order #{order.id}
+              </Typography>
+              <Chip
+                label={order.payment_method}
+                color="success"
+                size="small"
+              />
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" mt={0.5}>
+              {new Date(order.created_at).toLocaleString()}
+            </Typography>
 
             <Divider sx={{ my: 2 }} />
 
+            {/* ===== BUYER INFO ===== */}
+            <Typography fontWeight={600} color="#2e7d32">
+              Buyer Details
+            </Typography>
+            <Typography>
+              {order.user_name} ({order.user_email})
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* ===== ITEMS ===== */}
+            <Typography fontWeight={600} color="#2e7d32" mb={1}>
+              Items
+            </Typography>
+
             <Stack spacing={1}>
               {order.items.map((item) => (
-                <Box key={item.id} display="flex" justifyContent="space-between">
-                  <Typography>{item.product_name} × {item.quantity}</Typography>
-                  <Typography>₹{item.price * item.quantity}</Typography>
+                <Box
+                  key={item.id}
+                  display="flex"
+                  justifyContent="space-between"
+                >
+                  <Typography>
+                    {item.product_name} × {item.quantity}
+                  </Typography>
+                  <Typography fontWeight={500}>
+                    ₹{item.price * item.quantity}
+                  </Typography>
                 </Box>
               ))}
             </Stack>
 
             <Divider sx={{ my: 2 }} />
 
-            <Typography variant="h6">Total: ₹{order.total_amount}</Typography>
-            <Typography><b>Payment:</b> {order.payment_method}</Typography>
-            <Typography><b>Address:</b> {address}</Typography>
+            {/* ===== TOTAL & ADDRESS ===== */}
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              flexWrap="wrap"
+              gap={2}
+            >
+              <Typography variant="h6" color="#1b5e20">
+                Total: ₹{order.total_amount}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ maxWidth: 500 }}
+              >
+                <b>Delivery Address:</b> {address}
+              </Typography>
+            </Box>
           </Paper>
         );
       })}

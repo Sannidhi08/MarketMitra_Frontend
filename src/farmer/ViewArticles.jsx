@@ -18,10 +18,7 @@ const ViewArticles = () => {
 
   const fetchAdminArticles = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:3003/api/articles"
-      );
-
+      const res = await axios.get("http://localhost:3003/api/articles");
       setArticles(res.data.articles || []);
     } catch (err) {
       console.error("Error fetching articles:", err);
@@ -31,34 +28,57 @@ const ViewArticles = () => {
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Articles from Admin
+    <Box sx={{ p: 4, backgroundColor: "#f1f8f4", minHeight: "100vh" }}>
+      {/* PAGE HEADER */}
+      <Typography
+        variant="h4"
+        sx={{ fontWeight: 700, color: "#1b5e20" }}
+        gutterBottom
+      >
+        📰 Admin Articles
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        Read official articles and updates posted by the admin.
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ mb: 3 }}
+      >
+        Official updates, announcements, and guidance shared by the admin.
       </Typography>
 
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ mb: 3 }} />
 
+      {/* LOADING */}
       {loading ? (
-        <Box sx={{ textAlign: "center", mt: 3 }}>
-          <CircularProgress />
+        <Box textAlign="center" mt={6}>
+          <CircularProgress color="success" />
         </Box>
       ) : articles.length === 0 ? (
-        <Typography>No articles available.</Typography>
+        /* EMPTY */
+        <Typography textAlign="center" color="text.secondary">
+          No articles available at the moment 🌱
+        </Typography>
       ) : (
+        /* ARTICLES */
         articles.map((article) => (
           <Paper
             key={article.id}
-            variant="outlined"
-            sx={{ p: 2, mb: 2 }}
+            sx={{
+              p: 3,
+              mb: 3,
+              borderRadius: 3,
+              borderLeft: "6px solid #2e7d32",
+            }}
           >
-            <Typography variant="h6">
+            {/* TITLE */}
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: "#1b5e20" }}
+            >
               {article.title}
             </Typography>
 
+            {/* DATE */}
             <Typography
               variant="caption"
               color="text.secondary"
@@ -67,13 +87,22 @@ const ViewArticles = () => {
               {new Date(article.created_at).toLocaleDateString()}
             </Typography>
 
-            <Typography sx={{ mt: 1 }}>
+            <Divider sx={{ my: 2 }} />
+
+            {/* CONTENT */}
+            <Typography
+              variant="body1"
+              sx={{
+                whiteSpace: "pre-line",
+                lineHeight: 1.7,
+              }}
+            >
               {article.content}
             </Typography>
           </Paper>
         ))
       )}
-    </Paper>
+    </Box>
   );
 };
 

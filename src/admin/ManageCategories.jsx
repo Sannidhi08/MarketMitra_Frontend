@@ -4,136 +4,68 @@ import {
   Button,
   Typography,
   Paper,
-  List,
-  ListItem,
-  IconButton,
-  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
   CircularProgress,
-  Box
+  Box,
+  Divider,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+  TablePagination,
+  InputAdornment
 } from "@mui/material";
+
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+
 import axios from "axios";
+
+/* ---------------- CONFIG ---------------- */
 
 const BASE_URL = "http://localhost:3003";
 const CATEGORIES_URL = `${BASE_URL}/api/categories`;
 
+/* ---------------- COMPONENT ---------------- */
+
 const ManageCategories = () => {
   const [categories, setCategories] = useState([]);
+  const [search, setSearch] = useState("");
+
   const [form, setForm] = useState({
     category_name: "",
-    description: "",
-    image: ""
+    description: ""
   });
 
   const [open, setOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   const adminId = localStorage.getItem("userId");
 
-  /* FETCH CATEGORIES */
+  /* ---------------- FETCH ---------------- */
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
       const res = await axios.get(CATEGORIES_URL);
       setCategories(res.data.categories || []);
-    } catch (err) {
+    } catch {
       setError("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ADD CATEGORY */
-  const handleAdd = async () => {
-    if (!form.category_name.trim()) {
-      alert("Category name is required");
-      return;
-    }
-
-    if (!adminId) {
-      alert("Admin not logged in");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await axios.post(`${CATEGORIES_URL}/add`, form, {
-        headers: {
-          "x-user-id": adminId
-        }
-      });
-
-      setForm({ category_name: "", description: "", image: "" });
-      fetchCategories();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to add category");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* OPEN EDIT */
-  const openEdit = (cat) => {
-    setEditId(cat.id);
-    setForm({
-      category_name: cat.category_name,
-      description: cat.description,
-      image: cat.image
-    });
-    setOpen(true);
-  };
-
-  /* SAVE EDIT */
-  const saveEdit = async () => {
-    if (!form.category_name.trim()) return;
-
-    try {
-      setLoading(true);
-
-      await axios.put(
-        `${CATEGORIES_URL}/update/${editId}`,
-        form,
-        {
-          headers: {
-            "x-user-id": adminId
-          }
-        }
-      );
-
-      setOpen(false);
-      fetchCategories();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update category");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* DELETE CATEGORY */
-  const remove = async (id) => {
-    if (!window.confirm("Delete this category?")) return;
-
-    try {
-      setLoading(true);
-
-      await axios.delete(`${CATEGORIES_URL}/delete/${id}`, {
-        headers: {
-          "x-user-id": adminId
-        }
-      });
-
-      fetchCategories();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete category");
     } finally {
       setLoading(false);
     }
@@ -143,120 +75,282 @@ const ManageCategories = () => {
     fetchCategories();
   }, []);
 
+  /* ---------------- ADD ---------------- */
+
+  const handleAdd = async () => {
+    if (!form.category_name.trim())
+      return setError("Category name is required");
+
+    try {
+      setLoading(true);
+
+      await axios.post(`${CATEGORIES_URL}/add`, form, {
+        headers: { "x-user-id": adminId }
+      });
+
+      setForm({ category_name: "", description: "" });
+      fetchCategories();
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to add");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------------- EDIT ---------------- */
+
+  const openEdit = (cat) => {
+    setEditId(cat.id);
+    setForm({
+      category_name: cat.category_name,
+      description: cat.description
+    });
+    setOpen(true);
+  };
+
+  const saveEdit = async () => {
+    try {
+      setLoading(true);
+
+      await axios.put(
+        `${CATEGORIES_URL}/update/${editId}`,
+        form,
+        { headers: { "x-user-id": adminId } }
+      );
+
+      setOpen(false);
+      fetchCategories();
+    } catch (err) {
+      setError(err.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------------- DELETE ---------------- */
+
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setDeleteDialog(true);
+  };
+
+  const remove = async () => {
+    try {
+      setLoading(true);
+
+      await axios.delete(`${CATEGORIES_URL}/delete/${deleteId}`, {
+        headers: { "x-user-id": adminId }
+      });
+
+      setDeleteDialog(false);
+      fetchCategories();
+    } catch (err) {
+      setError(err.response?.data?.message || "Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ---------------- SEARCH FILTER ---------------- */
+
+  const filtered = categories.filter((c) =>
+    c.category_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ---------------- PAGINATION SLICE ---------------- */
+
+  const paginated = filtered.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  /* ---------------- UI ---------------- */
+
   return (
-    <Paper sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
-      <Typography variant="h5" gutterBottom>
-        Manage Categories
-      </Typography>
+    <Box sx={{ background: "#f4f6f8", minHeight: "100vh", p: 4 }}>
+      <Paper sx={{ maxWidth: 1100, mx: "auto", p: 4, borderRadius: 3 }}>
 
-      {error && <Alert severity="error">{error}</Alert>}
+        {/* HEADER */}
+        <Typography variant="h5" fontWeight={700} color="#2e7d32">
+          Category Management
+        </Typography>
 
-      {/* ADD CATEGORY */}
-      <Box sx={{ mt: 3 }}>
-        <TextField
-          label="Category Name"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={form.category_name}
-          onChange={(e) =>
-            setForm({ ...form, category_name: e.target.value })
-          }
-        />
+        <Typography variant="body2" color="text.secondary">
+          Create, search and manage product categories
+        </Typography>
 
-        <TextField
-          label="Description"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={form.description}
-          onChange={(e) =>
-            setForm({ ...form, description: e.target.value })
-          }
-        />
+        <Divider sx={{ my: 3 }} />
 
-        <TextField
-          label="Image URL"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={form.image}
-          onChange={(e) =>
-            setForm({ ...form, image: e.target.value })
-          }
-        />
+        {error && <Alert severity="error">{error}</Alert>}
 
-        <Button
-          variant="contained"
-          onClick={handleAdd}
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={20} /> : "Add Category"}
-        </Button>
-      </Box>
+        {/* ADD FORM */}
+        <Paper sx={{ p: 3, mb: 4, borderRadius: 3, background: "#fafafa" }}>
+          <Typography fontWeight={600} mb={2}>
+            Add New Category
+          </Typography>
 
-      {/* LIST */}
-      <List sx={{ mt: 4 }}>
-        {categories.map((cat) => (
-          <ListItem
-            key={cat.id}
-            divider
-            secondaryAction={
-              <>
-                <IconButton onClick={() => openEdit(cat)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => remove(cat.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </>
-            }
-          >
-            <ListItemText
-              primary={cat.category_name}
-              secondary={cat.description}
+          <Box sx={{ display: "grid", gap: 2 }}>
+            <TextField
+              label="Category Name"
+              value={form.category_name}
+              onChange={(e) =>
+                setForm({ ...form, category_name: e.target.value })
+              }
             />
-          </ListItem>
-        ))}
-      </List>
 
-      {/* EDIT DIALOG */}
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Edit Category</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Category Name"
-            fullWidth
-            sx={{ mt: 1 }}
-            value={form.category_name}
-            onChange={(e) =>
-              setForm({ ...form, category_name: e.target.value })
-            }
+            <TextField
+              label="Description"
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+            />
+
+            <Button
+              variant="contained"
+              onClick={handleAdd}
+              disabled={loading}
+              sx={{
+                bgcolor: "#2e7d32",
+                "&:hover": { bgcolor: "#1b5e20" }
+              }}
+            >
+              {loading
+                ? <CircularProgress size={20} color="inherit" />
+                : "Add Category"}
+            </Button>
+          </Box>
+        </Paper>
+
+        {/* SEARCH */}
+        <TextField
+          fullWidth
+          placeholder="Search categories..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            )
+          }}
+        />
+
+        {/* TABLE */}
+        <Paper sx={{ borderRadius: 3, overflow: "hidden" }}>
+          <Table>
+
+            <TableHead sx={{ background: "#eef3ef" }}>
+              <TableRow>
+                <TableCell><b>Name</b></TableCell>
+                <TableCell><b>Description</b></TableCell>
+                <TableCell align="right"><b>Actions</b></TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {paginated.map((cat) => (
+                <TableRow key={cat.id} hover>
+
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    {cat.category_name}
+                  </TableCell>
+
+                  <TableCell>
+                    {cat.description || "—"}
+                  </TableCell>
+
+                  <TableCell align="right">
+                    <IconButton onClick={() => openEdit(cat)}>
+                      <EditIcon color="primary" />
+                    </IconButton>
+
+                    <IconButton onClick={() => confirmDelete(cat.id)}>
+                      <DeleteIcon color="error" />
+                    </IconButton>
+                  </TableCell>
+
+                </TableRow>
+              ))}
+            </TableBody>
+
+          </Table>
+
+          {/* PAGINATION */}
+          <TablePagination
+            component="div"
+            count={filtered.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[5, 10, 25]}
           />
-          <TextField
-            label="Description"
-            fullWidth
-            sx={{ mt: 2 }}
-            value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
-          />
-          <TextField
-            label="Image URL"
-            fullWidth
-            sx={{ mt: 2 }}
-            value={form.image}
-            onChange={(e) =>
-              setForm({ ...form, image: e.target.value })
-            }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={saveEdit}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+        </Paper>
+
+        {/* EDIT MODAL */}
+        <Dialog open={open} onClose={() => setOpen(false)}>
+          <DialogTitle>Edit Category</DialogTitle>
+
+          <DialogContent sx={{ display: "grid", gap: 2, mt: 1 }}>
+            <TextField
+              label="Category Name"
+              value={form.category_name}
+              onChange={(e) =>
+                setForm({ ...form, category_name: e.target.value })
+              }
+            />
+
+            <TextField
+              label="Description"
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+            />
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={saveEdit}>
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* DELETE CONFIRMATION */}
+        <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
+          <DialogTitle>Delete Category?</DialogTitle>
+
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete this category?
+            </Typography>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => setDeleteDialog(false)}>
+              Cancel
+            </Button>
+
+            <Button
+              variant="contained"
+              color="error"
+              onClick={remove}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+      </Paper>
+    </Box>
   );
 };
 

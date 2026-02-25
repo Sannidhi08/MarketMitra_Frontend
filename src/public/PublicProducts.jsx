@@ -4,8 +4,12 @@ import { useNavigate } from "react-router-dom";
 import {
   Box, Grid, Card, CardContent, CardMedia,
   Typography, Button, Chip, Stack,
-  TextField, Select, MenuItem
+  TextField, Select, MenuItem, Container, 
+  InputAdornment, FormControl
 } from "@mui/material";
+import SearchIcon from '@mui/icons-material/Search';
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const API = "http://localhost:3003";
 
@@ -45,38 +49,24 @@ const PublicProducts = () => {
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.categories || [];
-
+      const data = Array.isArray(res.data) ? res.data : res.data.categories || [];
       setCategories(["All", ...data.map(c => c.category_name)]);
     } catch (err) {
       console.error(err);
     }
   };
 
-  /* ADD TO CART */
   const addToCart = product => {
     const key = token ? `cart_${userId}` : "guest_cart";
     const existing = JSON.parse(localStorage.getItem(key)) || [];
-
     const found = existing.find(i => i.id === product.id);
 
-    let updated;
-
-    if (found) {
-      updated = existing.map(i =>
-        i.id === product.id ? { ...i, qty: i.qty + 1 } : i
-      );
-    } else {
-      updated = [...existing, { ...product, qty: 1 }];
-    }
+    let updated = found 
+      ? existing.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
+      : [...existing, { ...product, qty: 1 }];
 
     localStorage.setItem(key, JSON.stringify(updated));
-
-    /* 🔥 notify navbar instantly */
     window.dispatchEvent(new Event("cartUpdated"));
-
     setAddedProductId(product.id);
 
     if (!token) {
@@ -87,92 +77,157 @@ const PublicProducts = () => {
 
   let filtered = (products || []).filter(p =>
     (category === "All" || p.category_name === category) &&
-    (p.product_name || "")
-      .toLowerCase()
-      .includes(search.toLowerCase())
+    (p.product_name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   if (sort === "low") filtered.sort((a, b) => a.price - b.price);
   if (sort === "high") filtered.sort((a, b) => b.price - a.price);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" textAlign="center" gutterBottom>
-        Products
-      </Typography>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f1f8e9", pb: 8 }}>
+      {/* Top Banner Area */}
+      <Box sx={{ bgcolor: "#dcedc8", py: 6, borderBottom: "1px solid #c5e1a5", mb: 4 }}>
+        <Container maxWidth="lg">
+          <Typography variant="h3" sx={{ color: "#1b5e20", fontWeight: 800, mb: 1 }}>
+            Fresh Market
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#558b2f", fontWeight: 500 }}>
+            Browse and buy fresh produce directly from local farms.
+          </Typography>
+        </Container>
+      </Box>
 
-      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          label="Search products"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-
-        <Select value={sort} displayEmpty onChange={e => setSort(e.target.value)}>
-          <MenuItem value="">Sort by Price</MenuItem>
-          <MenuItem value="low">Low → High</MenuItem>
-          <MenuItem value="high">High → Low</MenuItem>
-        </Select>
-      </Stack>
-
-      <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
-        {categories.map(cat => (
-          <Chip
-            key={cat}
-            label={cat}
-            clickable
-            color={category === cat ? "primary" : "default"}
-            onClick={() => setCategory(cat)}
+      <Container maxWidth="lg">
+        {/* Modern Filter Toolbar */}
+        <Stack 
+          direction={{ xs: "column", md: "row" }} 
+          spacing={2} 
+          sx={{ mb: 4, bgcolor: "#fff", p: 1.5, borderRadius: 3, border: "1px solid #c5e1a5" }}
+        >
+          <TextField
+            fullWidth
+            variant="standard"
+            placeholder="Search produce..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            InputProps={{
+              disableUnderline: true,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ ml: 1, color: "#2e7d32" }} />
+                </InputAdornment>
+              ),
+              sx: { height: 40 }
+            }}
+            sx={{ px: 2 }}
           />
-        ))}
-      </Stack>
+          
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <Select
+                value={sort}
+                displayEmpty
+                onChange={e => setSort(e.target.value)}
+                IconComponent={FilterListIcon}
+                sx={{ borderRadius: 2, bgcolor: "#f1f8e9", border: "none" }}
+              >
+                <MenuItem value="">Sort: Default</MenuItem>
+                <MenuItem value="low">Price: Low to High</MenuItem>
+                <MenuItem value="high">Price: High to Low</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Stack>
 
-      <Grid container spacing={3}>
-        {filtered.map(p => (
-          <Grid item xs={12} sm={6} md={4} key={p.id}>
-            <Card>
-              <CardMedia
-                component="img"
-                height="160"
-                image={p.image || "https://via.placeholder.com/300"}
-              />
+        {/* Categories Section */}
+        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 5 }}>
+          {categories.map(cat => (
+            <Chip
+              key={cat}
+              label={cat}
+              clickable
+              onClick={() => setCategory(cat)}
+              sx={{
+                px: 1,
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                bgcolor: category === cat ? "#2e7d32" : "#fff",
+                color: category === cat ? "#fff" : "#2e7d32",
+                border: "1px solid #c5e1a5",
+                "&:hover": { bgcolor: category === cat ? "#1b5e20" : "#dcedc8" }
+              }}
+            />
+          ))}
+        </Stack>
 
-              <CardContent>
-                <Typography variant="h6">{p.product_name}</Typography>
-                <Typography>₹ {p.price}</Typography>
+        {/* Product Catalogue Grid */}
+        <Grid container spacing={3}>
+          {filtered.map(p => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={p.id}>
+              <Card 
+                elevation={0}
+                sx={{ 
+                  borderRadius: 4, 
+                  bgcolor: "#fff", 
+                  border: "1px solid #c5e1a5",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column"
+                }}
+              >
+                <Box sx={{ p: 1 }}>
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={p.image || "https://via.placeholder.com/300"}
+                    sx={{ borderRadius: 3, objectFit: "cover" }}
+                  />
+                </Box>
+                
+                <CardContent sx={{ flexGrow: 1, pt: 1 }}>
+                  <Typography variant="caption" sx={{ color: "#689f38", fontWeight: 700, textTransform: "uppercase" }}>
+                    {p.category_name}
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: "#1b5e20", fontWeight: 700, mb: 1, lineHeight: 1.2 }}>
+                    {p.product_name}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#2e7d32", fontWeight: 800 }}>
+                    ₹{p.price}
+                  </Typography>
+                </CardContent>
 
-                {addedProductId === p.id ? (
+                <Box sx={{ p: 2, pt: 0 }}>
                   <Button
                     variant="contained"
-                    color="success"
                     fullWidth
-                    sx={{ mt: 2 }}
-                    onClick={() => navigate("/user/cart")}
+                    disableElevation
+                    startIcon={addedProductId === p.id ? null : <ShoppingBagOutlinedIcon />}
+                    onClick={() => addedProductId === p.id ? navigate("/user/cart") : addToCart(p)}
+                    sx={{ 
+                      borderRadius: 2.5, 
+                      py: 1.2,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      bgcolor: addedProductId === p.id ? "#388e3c" : "#2e7d32",
+                      "&:hover": { bgcolor: "#1b5e20" }
+                    }}
                   >
-                    Go To Cart
+                    {addedProductId === p.id ? "View in Cart" : "Add to Cart"}
                   </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    onClick={() => addToCart(p)}
-                  >
-                    Add to Cart
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
 
-      {filtered.length === 0 && (
-        <Typography textAlign="center" mt={5}>
-          No products found
-        </Typography>
-      )}
+        {filtered.length === 0 && (
+          <Box sx={{ textAlign: "center", mt: 10 }}>
+            <Typography variant="h6" sx={{ color: "#558b2f" }}>
+              No produce found matching your search.
+            </Typography>
+          </Box>
+        )}
+      </Container>
     </Box>
   );
 };

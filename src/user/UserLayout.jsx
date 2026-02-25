@@ -1,71 +1,170 @@
 import React from "react";
-import { Routes, Route, NavLink } from "react-router-dom";
-import { Box, Button, Paper, AppBar, Toolbar, Typography } from "@mui/material";
+import { Routes, Route, NavLink, useLocation } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Paper,
+  AppBar,
+  Toolbar,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
+  ListItemIcon
+} from "@mui/material";
 
+/* Icons */
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import LogoutIcon from "@mui/icons-material/Logout";
+
+/* Pages */
 import UserDashboard from "./UserDashboard";
-
 import Cart from "./Cart";
 import Orders from "./Orders";
 
-
-
-// Sidebar link style
-const linkStyle = ({ isActive }) => ({
-  width: "100%",
-  marginBottom: "8px",
-  backgroundColor: isActive ? "#1976d2" : "#e0e0e0",
-  color: isActive ? "#fff" : "#000",
-});
-
 const UserLayout = () => {
-  // Logout function
+  const location = useLocation();
+
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login"; // redirect to login page
+    window.location.href = "/login";
   };
 
+  const menuItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/user" },
+    { text: "Cart", icon: <ShoppingCartIcon />, path: "/user/cart" },
+    { text: "Orders", icon: <ReceiptIcon />, path: "/user/orders" }
+  ];
+
   return (
-    <Box>
-      {/* Top Navbar */}
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            User Panel
+    <Box sx={{ display: "flex", bgcolor: "#f5f7fa", minHeight: "100vh" }}>
+
+      {/* Sidebar */}
+      <Paper
+        elevation={0}
+        sx={{
+          width: 260,
+          height: "100vh",
+          position: "fixed",
+          borderRight: "1px solid #e0e0e0",
+          borderRadius: 0,
+          display: "flex",
+          flexDirection: "column"
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ p: 3, textAlign: "center" }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 800, color: "#2e7d32", letterSpacing: 1 }}
+          >
+            MARKET MITRA
           </Typography>
-          <Button color="inherit" onClick={handleLogout}>
+          <Typography variant="caption" color="text.secondary">
+            USER PANEL
+          </Typography>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {/* Menu */}
+        <List sx={{ px: 2, flexGrow: 1 }}>
+          {menuItems.map((item) => {
+            const isActive =
+              location.pathname === item.path ||
+              (item.path === "/user" && location.pathname === "/user/");
+
+            return (
+              <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  end={item.path === "/user"}
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: isActive ? "#e8f5e9" : "transparent",
+                    color: isActive ? "#2e7d32" : "#5f6368",
+                    "&:hover": { bgcolor: "#f1f8e9" },
+                    "& .MuiListItemIcon-root": {
+                      color: isActive ? "#2e7d32" : "#5f6368"
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+
+                  <ListItemText
+                    primary={item.text}
+                    primaryTypographyProps={{
+                      fontSize: "0.9rem",
+                      fontWeight: isActive ? 600 : 500
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+
+        {/* Logout */}
+        <Box sx={{ p: 2 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            sx={{ borderRadius: 2, textTransform: "none" }}
+          >
             Logout
           </Button>
-        </Toolbar>
-      </AppBar>
+        </Box>
+      </Paper>
 
-      {/* Sidebar + Content */}
-      <Box sx={{ display: "flex" }}>
-        {/* Sidebar */}
-        <Paper sx={{ width: 220, height: "100vh", p: 2 }}>
-          <Button component={NavLink} to="/user" end style={linkStyle}>
-            Dashboard
-          </Button>
-          
-          <Button component={NavLink} to="/user/cart" style={linkStyle}>
-            Cart
-          </Button>
-          <Button component={NavLink} to="/user/orders" style={linkStyle}>
-            Orders
-          </Button>
-          
-          
-        </Paper>
+      {/* Main Area */}
+      <Box sx={{ flexGrow: 1, ml: "260px" }}>
 
-        {/* Main Content */}
-        <Box sx={{ flexGrow: 1, p: 3 }}>
+        {/* Topbar */}
+        <AppBar
+          position="sticky"
+          elevation={0}
+          sx={{
+            bgcolor: "rgba(255,255,255,0.8)",
+            backdropFilter: "blur(8px)",
+            borderBottom: "1px solid #e0e0e0"
+          }}
+        >
+          <Toolbar>
+            <Typography
+              variant="body1"
+              sx={{ flexGrow: 1, color: "#202124", fontWeight: 500 }}
+            >
+              User Dashboard
+            </Typography>
+
+            {/* Avatar placeholder */}
+            <Box
+              sx={{
+                bgcolor: "#e0e0e0",
+                width: 35,
+                height: 35,
+                borderRadius: "50%"
+              }}
+            />
+          </Toolbar>
+        </AppBar>
+
+        {/* Page Content */}
+        <Box sx={{ p: 4 }}>
           <Routes>
-            {/* RELATIVE paths for nested routes */}
             <Route path="/" element={<UserDashboard />} />
-            
             <Route path="cart" element={<Cart />} />
             <Route path="orders" element={<Orders />} />
-            
-           
           </Routes>
         </Box>
       </Box>
