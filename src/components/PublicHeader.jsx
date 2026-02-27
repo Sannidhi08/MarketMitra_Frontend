@@ -2,17 +2,21 @@ import React, { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   Box,
   IconButton,
-  Badge
+  Badge,
+  Typography
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+
+// Ensure your logo path is correct
+import logo from "../assets/Gemini_Generated_Image_ailauaailauaaila-removebg-preview.png";
 
 const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // Hook to get current path
   const [count, setCount] = useState(0);
 
   const updateCart = () => {
@@ -58,70 +62,69 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      <Toolbar sx={{ maxWidth: "1200px", width: "100%", mx: "auto" }}>
-
-        {/* Logo */}
-        <Typography
-          variant="h6"
+      <Toolbar sx={{ maxWidth: "1200px", width: "100%", mx: "auto", py: 1 }}>
+        
+        {/* Logo Section */}
+        <Box
           component={Link}
           to="/"
           sx={{
+            display: "flex",
+            alignItems: "center",
             textDecoration: "none",
-            fontWeight: 700,
-            color: "#166534",
             mr: 5,
-            letterSpacing: 0.5,
+            height: "80px",
           }}
         >
-          Market Mitra
-        </Typography>
+          <img 
+            src={logo} 
+            alt="Market Mitra Logo" 
+            style={{ height: "100%", width: "auto" }} 
+          />
+        </Box>
 
-        {/* Navigation Links */}
-        <Box sx={{ flexGrow: 1, display: "flex", gap: 2 }}>
+        {/* Navigation Links with Active Highlighter */}
+        <Box sx={{ flexGrow: 1, display: "flex", gap: 1 }}>
           {[
             { label: "Home", path: "/" },
             { label: "Products", path: "/products" },
             { label: "Articles", path: "/articles" },
             { label: "Jobs", path: "/jobs" },
-          ].map((item, index) => (
-            <Button
-              key={index}
-              component={Link}
-              to={item.path}
-              sx={{
-                color: "#374151",
-                fontWeight: 500,
-                textTransform: "none",
-                fontSize: "0.95rem",
-                "&:hover": {
-                  backgroundColor: "#f0fdf4",
-                  color: "#166534",
-                },
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
+          ].map((item, index) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Button
+                key={index}
+                component={Link}
+                to={item.path}
+                sx={{
+                  color: isActive ? "#166534" : "#374151",
+                  fontWeight: isActive ? 700 : 500,
+                  textTransform: "none",
+                  fontSize: "0.95rem",
+                  px: 2,
+                  // Active state styles
+                  backgroundColor: isActive ? "#f0fdf4" : "transparent",
+                  borderBottom: isActive ? "2px solid #166534" : "2px solid transparent",
+                  borderRadius: 0,
+                  "&:hover": { 
+                    backgroundColor: "#f0fdf4", 
+                    color: "#166534" 
+                  },
+                }}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
         </Box>
 
-        {/* Cart */}
+        {/* Cart Icon */}
         <IconButton
           onClick={handleCartClick}
-          sx={{
-            mr: 2,
-            color: "#374151",
-            "&:hover": { backgroundColor: "#f3f4f6" },
-          }}
+          sx={{ mr: 2, color: "#374151", "&:hover": { backgroundColor: "#f3f4f6" } }}
         >
-          <Badge
-            badgeContent={count}
-            sx={{
-              "& .MuiBadge-badge": {
-                backgroundColor: "#dc2626",
-                color: "#ffffff",
-              },
-            }}
-          >
+          <Badge badgeContent={count} sx={{ "& .MuiBadge-badge": { backgroundColor: "#dc2626", color: "#ffffff" } }}>
             <ShoppingCartIcon />
           </Badge>
         </IconButton>
@@ -138,25 +141,16 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
               fontWeight: 600,
               px: 3,
               borderRadius: 2,
-              "&:hover": {
-                backgroundColor: "#14532d",
-              },
+              "&:hover": { backgroundColor: "#14532d" },
             }}
           >
             Login
           </Button>
         ) : (
           <>
-            <Typography
-              sx={{
-                mr: 2,
-                fontWeight: 500,
-                color: "#374151",
-              }}
-            >
+            <Typography sx={{ mr: 2, fontWeight: 500, color: "#374151" }}>
               {user?.name || "User"}
             </Typography>
-
             <Button
               onClick={handleLogout}
               variant="outlined"
@@ -166,10 +160,7 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
                 borderColor: "#166534",
                 color: "#166534",
                 borderRadius: 2,
-                "&:hover": {
-                  backgroundColor: "#f0fdf4",
-                  borderColor: "#14532d",
-                },
+                "&:hover": { backgroundColor: "#f0fdf4", borderColor: "#14532d" },
               }}
             >
               Logout
