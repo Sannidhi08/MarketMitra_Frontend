@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -12,12 +12,25 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/api";
 
 const Login = () => {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  /* ✅ CHECK IF USER ALREADY LOGGED IN */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && role) {
+      if (role === "admin") navigate("/admin");
+      else if (role === "farmer") navigate("/farmer");
+      else navigate("/");
+    }
+  }, [navigate]);
 
   const handleLogin = async () => {
     setError("");
@@ -87,7 +100,7 @@ const Login = () => {
 
       if (user.role === "admin") navigate("/admin");
       else if (user.role === "farmer") navigate("/farmer");
-      else navigate("/user");
+      else navigate("/");
 
     } catch (err) {
       console.error(err);

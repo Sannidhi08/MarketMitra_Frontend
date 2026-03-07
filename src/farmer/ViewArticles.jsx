@@ -8,6 +8,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+const IMAGE_URL = "http://localhost:3003/uploads/articles/";
+
 const ViewArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ const ViewArticles = () => {
 
   return (
     <Box sx={{ p: 4, backgroundColor: "#f1f8f4", minHeight: "100vh" }}>
+
       {/* PAGE HEADER */}
       <Typography
         variant="h4"
@@ -54,12 +57,15 @@ const ViewArticles = () => {
           <CircularProgress color="success" />
         </Box>
       ) : articles.length === 0 ? (
-        /* EMPTY */
+
+        /* EMPTY STATE */
         <Typography textAlign="center" color="text.secondary">
           No articles available at the moment 🌱
         </Typography>
+
       ) : (
-        /* ARTICLES */
+
+        /* ARTICLES LIST */
         articles.map((article) => (
           <Paper
             key={article.id}
@@ -68,37 +74,62 @@ const ViewArticles = () => {
               mb: 3,
               borderRadius: 3,
               borderLeft: "6px solid #2e7d32",
+              display: "flex",
+              gap: 3,
+              alignItems: "flex-start",
             }}
           >
-            {/* TITLE */}
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 600, color: "#1b5e20" }}
-            >
-              {article.title}
-            </Typography>
 
-            {/* DATE */}
-            <Typography
-              variant="caption"
-              color="text.secondary"
-            >
-              Published on{" "}
-              {new Date(article.created_at).toLocaleDateString()}
-            </Typography>
+            {/* ARTICLE IMAGE */}
+            {article.image && (
+              <Box
+                component="img"
+                src={`${IMAGE_URL}${article.image}`}
+                alt={article.title}
+                sx={{
+                  width: 160,
+                  height: 120,
+                  objectFit: "cover",
+                  borderRadius: 2,
+                }}
+              />
+            )}
 
-            <Divider sx={{ my: 2 }} />
+            {/* ARTICLE TEXT */}
+            <Box>
 
-            {/* CONTENT */}
-            <Typography
-              variant="body1"
-              sx={{
-                whiteSpace: "pre-line",
-                lineHeight: 1.7,
-              }}
-            >
-              {article.content}
-            </Typography>
+              {/* TITLE */}
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 600, color: "#1b5e20" }}
+              >
+                {article.title}
+              </Typography>
+
+              {/* DATE */}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+              >
+                Published on{" "}
+                {new Date(article.created_at).toLocaleDateString()}
+              </Typography>
+
+              <Divider sx={{ my: 1.5 }} />
+
+              {/* CONTENT */}
+              <Typography
+                variant="body1"
+                sx={{
+                  whiteSpace: "pre-line",
+                  lineHeight: 1.7,
+                }}
+              >
+                {article.content}
+              </Typography>
+
+            </Box>
+
           </Paper>
         ))
       )}

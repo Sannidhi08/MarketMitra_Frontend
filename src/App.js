@@ -7,16 +7,17 @@ import Home from "./public/Home";
 import PublicProducts from "./public/PublicProducts";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
-
 import Contact from "./public/Contact";
-import Jobs from "./public/ViewJobs"
+import Jobs from "./public/ViewJobs";
 import ForgotPassword from "./auth/ForgotPassword";
+
+/* -------- USER PAGES (MOVED TO PUBLIC) -------- */
+import Cart from "./public/Cart";
+import Orders from "./public/Orders";
 
 /* -------- DASHBOARDS -------- */
 import AdminLayout from "./admin/AdminLayout";
 import FarmerLayout from "./farmer/FarmerLayout";
-import UserLayout from "./user/UserLayout";
-import Cart from "./user/Cart";
 
 /* -------- PROTECTED ROUTES -------- */
 import ProtectedUserRoute from "./routes/ProtectedUserRoute";
@@ -28,28 +29,36 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* -------- PUBLIC PAGES -------- */}
+        {/* -------- PUBLIC + USER PAGES -------- */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<PublicProducts />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
           <Route path="/contact" element={<Contact />} />
           <Route path="/articles" element={<PublicArticles />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-        </Route>
 
-        {/* -------- USER DASHBOARD -------- */}
-        <Route
-          path="/user/*"
-          element={
-            <ProtectedUserRoute>
-              <UserLayout />
-            </ProtectedUserRoute>
-          }
-        />
+          {/* -------- PROTECTED USER PAGES -------- */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedUserRoute>
+                <Cart />
+              </ProtectedUserRoute>
+            }
+          />
+
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedUserRoute>
+                <Orders />
+              </ProtectedUserRoute>
+            }
+          />
+        </Route>
 
         {/* -------- FARMER DASHBOARD -------- */}
         <Route

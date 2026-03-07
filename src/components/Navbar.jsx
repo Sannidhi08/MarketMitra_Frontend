@@ -1,19 +1,27 @@
 import React, { useEffect, useState } from "react";
 import {
-  AppBar, Toolbar, Typography, Button,
-  IconButton, Badge
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Badge
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [userId, setUserId] = useState(localStorage.getItem("userId"));
   const [cartCount, setCartCount] = useState(0);
 
-  const loadCart = uid => {
-    if (!uid) return setCartCount(0);
+  const loadCart = (uid) => {
+    if (!uid) {
+      setCartCount(0);
+      return;
+    }
 
     const cart = JSON.parse(localStorage.getItem(`cart_${uid}`)) || [];
     const total = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -52,10 +60,11 @@ const Navbar = () => {
     navigate("/login");
   };
 
+  // ✅ FIXED ROUTE
   const handleCartClick = () => {
     const uid = localStorage.getItem("userId");
     if (!uid) navigate("/login");
-    else navigate("/user/cart");
+    else navigate("/cart");
   };
 
   return (
@@ -66,9 +75,32 @@ const Navbar = () => {
           Market Mitra
         </Typography>
 
-        <Button color="inherit" component={Link} to="/">Home</Button>
-        <Button color="inherit" component={Link} to="/articles">Articles</Button>
-        <Button color="inherit" component={Link} to="/jobs">Jobs</Button>
+        <Button
+          color="inherit"
+          component={Link}
+          to="/"
+          sx={{ fontWeight: location.pathname === "/" ? 700 : 400 }}
+        >
+          Home
+        </Button>
+
+        <Button
+          color="inherit"
+          component={Link}
+          to="/articles"
+          sx={{ fontWeight: location.pathname === "/articles" ? 700 : 400 }}
+        >
+          Articles
+        </Button>
+
+        <Button
+          color="inherit"
+          component={Link}
+          to="/jobs"
+          sx={{ fontWeight: location.pathname === "/jobs" ? 700 : 400 }}
+        >
+          Jobs
+        </Button>
 
         <IconButton color="inherit" onClick={handleCartClick}>
           <Badge badgeContent={cartCount} color="error">

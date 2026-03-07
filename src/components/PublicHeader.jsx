@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   AppBar,
@@ -11,45 +12,53 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
-// Ensure your logo path is correct
 import logo from "../assets/Gemini_Generated_Image_ailauaailauaaila-removebg-preview.png";
 
-const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
+const PublicHeader = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get current path
-  const [count, setCount] = useState(0);
+  const location = useLocation();
+
+  const [cartCount, setCartCount] = useState(0);
+  const [userId, setUserId] = useState(localStorage.getItem("userId"));
+  const [userName, setUserName] = useState(localStorage.getItem("userName"));
 
   const updateCart = () => {
-    const userId = localStorage.getItem("userId");
-    const key = userId ? `cart_${userId}` : "guest_cart";
+    const uid = localStorage.getItem("userId");
+    const key = uid ? `cart_${uid}` : "guest_cart";
     const cart = JSON.parse(localStorage.getItem(key)) || [];
     const total = cart.reduce((s, i) => s + i.qty, 0);
-    setCount(total);
+    setCartCount(total);
   };
 
   useEffect(() => {
+    const handleAuthChange = () => {
+      setUserId(localStorage.getItem("userId"));
+      setUserName(localStorage.getItem("userName"));
+      updateCart();
+    };
+
     updateCart();
+
+    window.addEventListener("authChanged", handleAuthChange);
     window.addEventListener("cartUpdated", updateCart);
-    window.addEventListener("authChanged", updateCart);
 
     return () => {
+      window.removeEventListener("authChanged", handleAuthChange);
       window.removeEventListener("cartUpdated", updateCart);
-      window.removeEventListener("authChanged", updateCart);
     };
   }, []);
 
   const handleLogout = () => {
     localStorage.clear();
-    setIsLoggedIn(false);
     window.dispatchEvent(new Event("authChanged"));
     window.dispatchEvent(new Event("cartUpdated"));
     navigate("/login");
   };
 
   const handleCartClick = () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) navigate("/login");
-    else navigate("/user/cart");
+    const uid = localStorage.getItem("userId");
+    if (!uid) navigate("/login");
+    else navigate("/cart");
   };
 
   return (
@@ -63,8 +72,8 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
       }}
     >
       <Toolbar sx={{ maxWidth: "1200px", width: "100%", mx: "auto", py: 1 }}>
-        
-        {/* Logo Section */}
+
+        {/* Logo */}
         <Box
           component={Link}
           to="/"
@@ -76,14 +85,14 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
             height: "80px",
           }}
         >
-          <img 
-            src={logo} 
-            alt="Market Mitra Logo" 
-            style={{ height: "100%", width: "auto" }} 
+          <img
+            src={logo}
+            alt="Market Mitra Logo"
+            style={{ height: "100%", width: "auto" }}
           />
         </Box>
 
-        {/* Navigation Links with Active Highlighter */}
+        {/* Navigation */}
         <Box sx={{ flexGrow: 1, display: "flex", gap: 1 }}>
           {[
             { label: "Home", path: "/" },
@@ -92,6 +101,7 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
             { label: "Jobs", path: "/jobs" },
           ].map((item, index) => {
             const isActive = location.pathname === item.path;
+
             return (
               <Button
                 key={index}
@@ -103,13 +113,14 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
                   textTransform: "none",
                   fontSize: "0.95rem",
                   px: 2,
-                  // Active state styles
                   backgroundColor: isActive ? "#f0fdf4" : "transparent",
-                  borderBottom: isActive ? "2px solid #166534" : "2px solid transparent",
+                  borderBottom: isActive
+                    ? "2px solid #166534"
+                    : "2px solid transparent",
                   borderRadius: 0,
-                  "&:hover": { 
-                    backgroundColor: "#f0fdf4", 
-                    color: "#166534" 
+                  "&:hover": {
+                    backgroundColor: "#f0fdf4",
+                    color: "#166534",
                   },
                 }}
               >
@@ -117,20 +128,61 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
               </Button>
             );
           })}
+
+          {userId && (
+            <Button
+              component={Link}
+              to="/my-orders"
+              sx={{
+                color:
+                  location.pathname === "/my-orders"
+                    ? "#166534"
+                    : "#374151",
+                fontWeight:
+                  location.pathname === "/my-orders" ? 700 : 500,
+                textTransform: "none",
+                px: 2,
+                backgroundColor:
+                  location.pathname === "/my-orders"
+                    ? "#f0fdf4"
+                    : "transparent",
+                borderBottom:
+                  location.pathname === "/my-orders"
+                    ? "2px solid #166534"
+                    : "2px solid transparent",
+                borderRadius: 0,
+              }}
+            >
+              My Orders
+            </Button>
+          )}
         </Box>
 
-        {/* Cart Icon */}
+        {/* Cart */}
         <IconButton
           onClick={handleCartClick}
-          sx={{ mr: 2, color: "#374151", "&:hover": { backgroundColor: "#f3f4f6" } }}
+          sx={{
+            mr: 2,
+            color: "#374151",
+            "&:hover": { backgroundColor: "#f3f4f6" },
+          }}
         >
-          <Badge badgeContent={count} sx={{ "& .MuiBadge-badge": { backgroundColor: "#dc2626", color: "#ffffff" } }}>
+          <Badge
+            badgeContent={cartCount}
+            sx={{
+              "& .MuiBadge-badge": {
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+              },
+            }}
+          >
             <ShoppingCartIcon />
           </Badge>
         </IconButton>
 
         {/* Auth Section */}
-        {!isLoggedIn ? (
+
+        {!userId && location.pathname !== "/login" && (
           <Button
             component={Link}
             to="/login"
@@ -146,30 +198,35 @@ const PublicHeader = ({ isLoggedIn, user, setIsLoggedIn }) => {
           >
             Login
           </Button>
-        ) : (
+        )}
+
+        {userId && (
           <>
             <Typography sx={{ mr: 2, fontWeight: 500, color: "#374151" }}>
-              {user?.name || "User"}
+              {userName || "User"}
             </Typography>
+
             <Button
               onClick={handleLogout}
-              variant="outlined"
+              variant="contained"
               sx={{
+                backgroundColor: "#166534",
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: "#166534",
-                color: "#166534",
+                px: 3,
                 borderRadius: 2,
-                "&:hover": { backgroundColor: "#f0fdf4", borderColor: "#14532d" },
+                "&:hover": { backgroundColor: "#14532d" },
               }}
             >
               Logout
             </Button>
           </>
         )}
+
       </Toolbar>
     </AppBar>
   );
 };
 
 export default PublicHeader;
+

@@ -1,149 +1,322 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Paper,
   Typography,
-  Button,
   Grid,
-  Avatar,
-  Divider,
+  Paper,
+  Box,
+  Stack,
+  CircularProgress,
+  Alert,
+  Button,
+  Container
 } from "@mui/material";
 
-const FarmerDashboard = () => {
-  const navigate = useNavigate();
+import AgricultureIcon from "@mui/icons-material/Agriculture";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import WorkIcon from "@mui/icons-material/Work";
 
-  return (
-    <Box>
-      {/* Header */}
-      <Paper
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from "recharts";
+
+/* ---------- Stat Card ---------- */
+
+const StatCard = ({ title, value, icon, color, loading }) => (
+  <Paper
+    elevation={3}
+    sx={{
+      p: 3,
+      borderRadius: 3,
+      height: "100%",
+      transition: "0.3s",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: 6
+      }
+    }}
+  >
+    <Stack direction="row" spacing={2} alignItems="center">
+      <Box
         sx={{
-          p: 3,
-          background: "linear-gradient(135deg, #2e7d32, #66bb6a)",
-          color: "white",
+          p: 1.5,
+          backgroundColor: `${color}20`,
           borderRadius: 2,
+          color: color
         }}
       >
-        <Typography variant="h4" fontWeight="bold">
+        {icon}
+      </Box>
+
+      <Box>
+        <Typography variant="body2" color="text.secondary">
+          {title}
+        </Typography>
+
+        {loading ? (
+          <CircularProgress size={22} />
+        ) : (
+          <Typography variant="h5" fontWeight="bold">
+            {value}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
+  </Paper>
+);
+
+/* ---------- Farmer Dashboard ---------- */
+
+const FarmerDashboard = () => {
+
+  const navigate = useNavigate();
+
+  const [counts, setCounts] = useState({
+    products: 0,
+    orders: 0,
+    jobs: 0
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+
+      const farmerId = localStorage.getItem("userId");
+
+      const response = await axios.get(
+        "http://localhost:3003/api/farmer/dashboard-stats",
+        {
+          headers: {
+            "x-user-id": farmerId
+          }
+        }
+      );
+
+      if (response.data.success) {
+
+        setCounts({
+          products: Number(response.data.products) || 0,
+          orders: Number(response.data.orders) || 0,
+          jobs: Number(response.data.jobs) || 0
+        });
+
+      }
+
+    } catch (err) {
+
+      setError(
+        err.response?.data?.message ||
+        "Failed to fetch farmer dashboard stats"
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  const pieData = [
+    { name: "Products", value: counts.products },
+    { name: "Orders", value: counts.orders },
+    { name: "Jobs", value: counts.jobs }
+  ];
+
+  const COLORS = ["#2e7d32", "#1976d2", "#ed6c02"];
+
+  return (
+
+    <Container maxWidth="lg" sx={{ py: 5 }}>
+
+      {/* HEADER */}
+
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight="bold" color="success.main">
           Farmer Dashboard 🌾
         </Typography>
-        <Typography sx={{ mt: 1 }}>
-          Manage your products, orders, and job posts in one place
+
+        <Typography color="text.secondary">
+          Manage your farm products, orders and jobs
         </Typography>
-      </Paper>
+      </Box>
 
-      {/* Info Section */}
-      <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Welcome Card */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <Avatar sx={{ bgcolor: "#2e7d32" }}>F</Avatar>
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
-                  Welcome Back!
-                </Typography>
-                <Typography color="text.secondary">
-                  Have a productive day 🌱
-                </Typography>
-              </Box>
-            </Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-            <Divider sx={{ my: 2 }} />
+      {/* STAT CARDS */}
 
-            <Typography variant="body2" color="text.secondary">
-              Keep your product listings updated to get better visibility
-              and faster orders.
-            </Typography>
-          </Paper>
+      <Grid container spacing={3}>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="My Products"
+            value={counts.products}
+            icon={<AgricultureIcon />}
+            color="#2e7d32"
+            loading={loading}
+          />
         </Grid>
 
-        {/* Stats Cards */}
-        <Grid item xs={12} md={8}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Products
-                </Typography>
-                <Typography color="text.secondary">
-                  Add & manage your products
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Orders
-                </Typography>
-                <Typography color="text.secondary">
-                  Track customer orders
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Jobs
-                </Typography>
-                <Typography color="text.secondary">
-                  Post & manage farm jobs
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Orders Received"
+            value={counts.orders}
+            icon={<ShoppingCartIcon />}
+            color="#1976d2"
+            loading={loading}
+          />
         </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <StatCard
+            title="Job Posts"
+            value={counts.jobs}
+            icon={<WorkIcon />}
+            color="#ed6c02"
+            loading={loading}
+          />
+        </Grid>
+
       </Grid>
 
-      {/* Quick Actions */}
-      <Paper sx={{ p: 3, mt: 4 }}>
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
+
+      {/* CHART SECTION (LIKE YOUR DESIGN) */}
+
+      <Grid container sx={{ mt: 9 }} justifyContent="center">
+
+        <Grid item xs={12} md={10}>
+
+          <Paper
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              height: 450,
+              border: "2px solid #e0e0e0",
+              mx: "auto",
+              width: "100%"
+            }}
+          >
+
+            <Typography
+              variant="h6"
+              fontWeight="600"
+              textAlign="center"
+              mb={3}
+            >
+              Products vs Orders vs Jobs
+            </Typography>
+
+            <ResponsiveContainer width="100%" height="85%">
+
+              <PieChart>
+
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  outerRadius={150}
+                  innerRadius={70}
+                  label
+                >
+
+                  {pieData.map((entry, index) => (
+                    <Cell key={index} fill={COLORS[index]} />
+                  ))}
+
+                </Pie>
+
+                <Tooltip />
+
+                <Legend verticalAlign="bottom" />
+
+              </PieChart>
+
+            </ResponsiveContainer>
+
+          </Paper>
+
+        </Grid>
+
+      </Grid>
+
+
+      {/* QUICK ACTIONS */}
+
+      <Paper
+        elevation={3}
+        sx={{
+          mt: 4,
+          p: 3,
+          borderRadius: 3
+        }}
+      >
+
+        <Typography variant="h6" fontWeight="bold" mb={2}>
           Quick Actions
         </Typography>
 
-        <Button
-          variant="contained"
-          sx={{ mr: 2 }}
-          onClick={() => navigate("/farmer/products")}
-        >
-          ADD PRODUCT
-        </Button>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
 
-        <Button
-          variant="outlined"
-          sx={{ mr: 2 }}
-          onClick={() => navigate("/farmer/orders")}
-        >
-          VIEW ORDERS
-        </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/farmer/products")}
+          >
+            Add Product
+          </Button>
 
-        <Button
-          variant="outlined"
-          onClick={() => navigate("/farmer/jobs")}
-        >
-          POST JOB
-        </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/farmer/orders")}
+          >
+            View Orders
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/farmer/jobs")}
+          >
+            Post Job
+          </Button>
+
+        </Stack>
+
       </Paper>
 
-      {/* Tips Section */}
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" fontWeight="bold">
-          Tips for Farmers 🌿
+
+      {/* FOOTER */}
+
+      <Paper
+        sx={{
+          mt: 4,
+          p: 2,
+          textAlign: "center",
+          bgcolor: "#f8f9fa",
+          borderRadius: 2
+        }}
+      >
+
+        <Typography variant="body2" color="text.secondary">
+          Connected to <b>Market Mitra Database</b>
         </Typography>
 
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          • Add clear product images to attract more buyers  
-        </Typography>
-        <Typography variant="body2">
-          • Keep prices updated based on market demand  
-        </Typography>
-        <Typography variant="body2">
-          • Respond quickly to orders for better ratings  
-        </Typography>
       </Paper>
-    </Box>
+
+    </Container>
   );
 };
 

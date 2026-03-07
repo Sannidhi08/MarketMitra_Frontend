@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 
 const API_URL = "http://localhost:3003/api/articles/public";
+const IMAGE_URL = "http://localhost:3003/uploads/articles/";
 
 const PublicArticles = () => {
   const [articles, setArticles] = useState([]);
@@ -30,48 +31,26 @@ const PublicArticles = () => {
     fetchArticles();
   }, []);
 
-  /* ---------- Skeleton Card ---------- */
   const SkeletonCard = () => (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        border: "1px solid #e0e0e0",
-      }}
-    >
+    <Paper sx={{ p: 3, borderRadius: 3 }}>
       <Skeleton width="60%" height={32} />
       <Skeleton width="30%" />
       <Divider sx={{ my: 2 }} />
       <Skeleton />
       <Skeleton />
-      <Skeleton width="90%" />
     </Paper>
   );
 
   return (
-    <Box
-      sx={{
-        maxWidth: 1100,
-        mx: "auto",
-        p: 4,
-      }}
-    >
-      {/* Header */}
+    <Box sx={{ maxWidth: 1100, mx: "auto", p: 4 }}>
       <Typography
         variant="h4"
-        sx={{
-          mb: 4,
-          fontWeight: 800,
-          color: "#2e7d32",
-          letterSpacing: 0.5,
-        }}
+        sx={{ mb: 4, fontWeight: 800, color: "#2e7d32" }}
       >
         Latest Updates & Articles
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Loading State */}
         {loading &&
           [...Array(6)].map((_, index) => (
             <Grid item xs={12} md={6} key={index}>
@@ -79,37 +58,36 @@ const PublicArticles = () => {
             </Grid>
           ))}
 
-        {/* Empty State */}
-        {!loading && articles.length === 0 && (
-          <Box sx={{ width: "100%", textAlign: "center", mt: 6 }}>
-            <Typography variant="h6" color="text.secondary">
-              No articles available
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Please check again later
-            </Typography>
-          </Box>
-        )}
-
-        {/* Articles */}
         {!loading &&
           articles.map((article) => (
             <Grid item xs={12} md={6} key={article.id}>
               <Paper
-                elevation={0}
                 sx={{
                   p: 3,
                   borderRadius: 3,
-                  border: "1px solid #e0e0e0",
-                  transition: "all 0.25s ease",
-                  backgroundColor: "#ffffff",
+                  transition: "0.3s",
                   "&:hover": {
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                    transform: "translateY(-4px)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
                   },
                 }}
               >
-                {/* Title */}
+                {/* IMAGE */}
+                {article.image && (
+                  <Box
+                    component="img"
+                    src={`${IMAGE_URL}${article.image}`}
+                    alt={article.title}
+                    sx={{
+                      width: "100%",
+                      height: 200,
+                      objectFit: "cover",
+                      borderRadius: 2,
+                      mb: 2,
+                    }}
+                  />
+                )}
+
+                {/* TITLE */}
                 <Typography
                   variant="h6"
                   sx={{ fontWeight: 700, color: "#1b5e20" }}
@@ -117,24 +95,15 @@ const PublicArticles = () => {
                   {article.title}
                 </Typography>
 
-                {/* Date */}
-                <Typography
-                  variant="caption"
-                  sx={{ color: "#6b7280" }}
-                >
+                {/* DATE */}
+                <Typography variant="caption" color="text.secondary">
                   {new Date(article.created_at).toLocaleDateString()}
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
 
-                {/* Content */}
-                <Typography
-                  variant="body1"
-                  sx={{
-                    lineHeight: 1.7,
-                    color: "#333",
-                  }}
-                >
+                {/* CONTENT */}
+                <Typography sx={{ lineHeight: 1.7 }}>
                   {article.content}
                 </Typography>
               </Paper>

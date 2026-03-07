@@ -4,16 +4,17 @@ import { useNavigate } from "react-router-dom";
 import {
   Box, Grid, Card, CardContent, CardMedia,
   Typography, Button, Chip, Stack,
-  TextField, Select, MenuItem, Container, 
+  TextField, Select, MenuItem, Container,
   InputAdornment, FormControl
 } from "@mui/material";
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import SearchIcon from "@mui/icons-material/Search";
+import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
+import FilterListIcon from "@mui/icons-material/FilterList";
 
 const API = "http://localhost:3003";
 
 const PublicProducts = () => {
+
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
@@ -21,7 +22,6 @@ const PublicProducts = () => {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
-  const [addedProductId, setAddedProductId] = useState(null);
 
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
@@ -31,7 +31,7 @@ const PublicProducts = () => {
     loadCategories();
   }, []);
 
-  const normalize = data => {
+  const normalize = (data) => {
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.products)) return data.products;
     return [];
@@ -49,25 +49,32 @@ const PublicProducts = () => {
   const loadCategories = async () => {
     try {
       const res = await axios.get(`${API}/api/categories`);
-      const data = Array.isArray(res.data) ? res.data : res.data.categories || [];
-      setCategories(["All", ...data.map(c => c.category_name)]);
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.categories || [];
+      setCategories(["All", ...data.map((c) => c.category_name)]);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const addToCart = product => {
-    const key = token ? `cart_${userId}` : "guest_cart";
-    const existing = JSON.parse(localStorage.getItem(key)) || [];
-    const found = existing.find(i => i.id === product.id);
+  const addToCart = (product) => {
 
-    let updated = found 
-      ? existing.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i)
+    const key = token ? `cart_${userId}` : "guest_cart";
+
+    const existing = JSON.parse(localStorage.getItem(key)) || [];
+
+    const found = existing.find((i) => i.id === product.id);
+
+    let updated = found
+      ? existing.map((i) =>
+          i.id === product.id ? { ...i, qty: i.qty + 1 } : i
+        )
       : [...existing, { ...product, qty: 1 }];
 
     localStorage.setItem(key, JSON.stringify(updated));
+
     window.dispatchEvent(new Event("cartUpdated"));
-    setAddedProductId(product.id);
 
     if (!token) {
       localStorage.setItem("redirectAfterLogin", "/products");
@@ -75,9 +82,10 @@ const PublicProducts = () => {
     }
   };
 
-  let filtered = (products || []).filter(p =>
-    (category === "All" || p.category_name === category) &&
-    (p.product_name || "").toLowerCase().includes(search.toLowerCase())
+  let filtered = (products || []).filter(
+    (p) =>
+      (category === "All" || p.category_name === category) &&
+      (p.product_name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   if (sort === "low") filtered.sort((a, b) => a.price - b.price);
@@ -85,31 +93,53 @@ const PublicProducts = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f1f8e9", pb: 8 }}>
-      {/* Top Banner Area */}
-      <Box sx={{ bgcolor: "#dcedc8", py: 6, borderBottom: "1px solid #c5e1a5", mb: 4 }}>
+
+      {/* Banner */}
+      <Box
+        sx={{
+          bgcolor: "#dcedc8",
+          py: 6,
+          borderBottom: "1px solid #c5e1a5",
+          mb: 4,
+        }}
+      >
         <Container maxWidth="lg">
-          <Typography variant="h3" sx={{ color: "#1b5e20", fontWeight: 800, mb: 1 }}>
+          <Typography
+            variant="h3"
+            sx={{ color: "#1b5e20", fontWeight: 800, mb: 1 }}
+          >
             Fresh Market
           </Typography>
-          <Typography variant="body1" sx={{ color: "#558b2f", fontWeight: 500 }}>
+
+          <Typography
+            variant="body1"
+            sx={{ color: "#558b2f", fontWeight: 500 }}
+          >
             Browse and buy fresh produce directly from local farms.
           </Typography>
         </Container>
       </Box>
 
       <Container maxWidth="lg">
-        {/* Modern Filter Toolbar */}
-        <Stack 
-          direction={{ xs: "column", md: "row" }} 
-          spacing={2} 
-          sx={{ mb: 4, bgcolor: "#fff", p: 1.5, borderRadius: 3, border: "1px solid #c5e1a5" }}
+
+        {/* Filters */}
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          sx={{
+            mb: 4,
+            bgcolor: "#fff",
+            p: 1.5,
+            borderRadius: 3,
+            border: "1px solid #c5e1a5",
+          }}
         >
           <TextField
             fullWidth
             variant="standard"
             placeholder="Search produce..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             InputProps={{
               disableUnderline: true,
               startAdornment: (
@@ -117,19 +147,23 @@ const PublicProducts = () => {
                   <SearchIcon sx={{ ml: 1, color: "#2e7d32" }} />
                 </InputAdornment>
               ),
-              sx: { height: 40 }
+              sx: { height: 40 },
             }}
             sx={{ px: 2 }}
           />
-          
+
           <Box sx={{ display: "flex", gap: 2 }}>
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <Select
                 value={sort}
                 displayEmpty
-                onChange={e => setSort(e.target.value)}
+                onChange={(e) => setSort(e.target.value)}
                 IconComponent={FilterListIcon}
-                sx={{ borderRadius: 2, bgcolor: "#f1f8e9", border: "none" }}
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: "#f1f8e9",
+                  border: "none",
+                }}
               >
                 <MenuItem value="">Sort: Default</MenuItem>
                 <MenuItem value="low">Price: Low to High</MenuItem>
@@ -139,9 +173,9 @@ const PublicProducts = () => {
           </Box>
         </Stack>
 
-        {/* Categories Section */}
+        {/* Categories */}
         <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 5 }}>
-          {categories.map(cat => (
+          {categories.map((cat) => (
             <Chip
               key={cat}
               label={cat}
@@ -154,25 +188,27 @@ const PublicProducts = () => {
                 bgcolor: category === cat ? "#2e7d32" : "#fff",
                 color: category === cat ? "#fff" : "#2e7d32",
                 border: "1px solid #c5e1a5",
-                "&:hover": { bgcolor: category === cat ? "#1b5e20" : "#dcedc8" }
+                "&:hover": {
+                  bgcolor: category === cat ? "#1b5e20" : "#dcedc8",
+                },
               }}
             />
           ))}
         </Stack>
 
-        {/* Product Catalogue Grid */}
+        {/* Products */}
         <Grid container spacing={3}>
-          {filtered.map(p => (
+          {filtered.map((p) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={p.id}>
-              <Card 
+              <Card
                 elevation={0}
-                sx={{ 
-                  borderRadius: 4, 
-                  bgcolor: "#fff", 
+                sx={{
+                  borderRadius: 4,
+                  bgcolor: "#fff",
                   border: "1px solid #c5e1a5",
                   height: "100%",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 }}
               >
                 <Box sx={{ p: 1 }}>
@@ -183,15 +219,35 @@ const PublicProducts = () => {
                     sx={{ borderRadius: 3, objectFit: "cover" }}
                   />
                 </Box>
-                
+
                 <CardContent sx={{ flexGrow: 1, pt: 1 }}>
-                  <Typography variant="caption" sx={{ color: "#689f38", fontWeight: 700, textTransform: "uppercase" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#689f38",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}
+                  >
                     {p.category_name}
                   </Typography>
-                  <Typography variant="h6" sx={{ color: "#1b5e20", fontWeight: 700, mb: 1, lineHeight: 1.2 }}>
+
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: "#1b5e20",
+                      fontWeight: 700,
+                      mb: 1,
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {p.product_name}
                   </Typography>
-                  <Typography variant="h5" sx={{ color: "#2e7d32", fontWeight: 800 }}>
+
+                  <Typography
+                    variant="h5"
+                    sx={{ color: "#2e7d32", fontWeight: 800 }}
+                  >
                     ₹{p.price}
                   </Typography>
                 </CardContent>
@@ -201,18 +257,18 @@ const PublicProducts = () => {
                     variant="contained"
                     fullWidth
                     disableElevation
-                    startIcon={addedProductId === p.id ? null : <ShoppingBagOutlinedIcon />}
-                    onClick={() => addedProductId === p.id ? navigate("/user/cart") : addToCart(p)}
-                    sx={{ 
-                      borderRadius: 2.5, 
+                    startIcon={<ShoppingBagOutlinedIcon />}
+                    onClick={() => addToCart(p)}
+                    sx={{
+                      borderRadius: 2.5,
                       py: 1.2,
                       textTransform: "none",
                       fontWeight: 700,
-                      bgcolor: addedProductId === p.id ? "#388e3c" : "#2e7d32",
-                      "&:hover": { bgcolor: "#1b5e20" }
+                      bgcolor: "#2e7d32",
+                      "&:hover": { bgcolor: "#1b5e20" },
                     }}
                   >
-                    {addedProductId === p.id ? "View in Cart" : "Add to Cart"}
+                    Add to Cart
                   </Button>
                 </Box>
               </Card>
