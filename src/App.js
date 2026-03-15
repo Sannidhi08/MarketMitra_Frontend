@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+
 /* -------- PUBLIC -------- */
 import PublicLayout from "./layouts/PublicLayout";
 import PublicArticles from "./public/PublicArticles";
@@ -11,7 +12,7 @@ import Contact from "./public/Contact";
 import Jobs from "./public/ViewJobs";
 import ForgotPassword from "./auth/ForgotPassword";
 
-/* -------- USER PAGES (MOVED TO PUBLIC) -------- */
+/* -------- USER PAGES -------- */
 import Cart from "./public/Cart";
 import Orders from "./public/Orders";
 
@@ -27,9 +28,10 @@ import ProtectedFarmerRoute from "./routes/ProtectedFarmerRoute";
 function App() {
   return (
     <BrowserRouter>
+
+
       <Routes>
 
-        {/* -------- PUBLIC + USER PAGES -------- */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<PublicProducts />} />
@@ -40,7 +42,6 @@ function App() {
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* -------- PROTECTED USER PAGES -------- */}
           <Route
             path="/cart"
             element={
@@ -60,7 +61,6 @@ function App() {
           />
         </Route>
 
-        {/* -------- FARMER DASHBOARD -------- */}
         <Route
           path="/farmer/*"
           element={
@@ -70,7 +70,6 @@ function App() {
           }
         />
 
-        {/* -------- ADMIN DASHBOARD -------- */}
         <Route
           path="/admin/*"
           element={

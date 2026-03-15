@@ -54,9 +54,7 @@ const Footer = () => {
               <Link href="/products" underline="none" color="inherit" sx={{ opacity: 0.85 }}>
                 Products
               </Link>
-              <Link href="/about" underline="none" color="inherit" sx={{ opacity: 0.85 }}>
-                About Us
-              </Link>
+              
               <Link href="/contact" underline="none" color="inherit" sx={{ opacity: 0.85 }}>
                 Contact
               </Link>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   AppBar,
@@ -48,6 +47,10 @@ const PublicHeader = () => {
     };
   }, []);
 
+  useEffect(() => {
+    updateCart();
+  }, [location.pathname]);
+
   const handleLogout = () => {
     localStorage.clear();
     window.dispatchEvent(new Event("authChanged"));
@@ -73,6 +76,10 @@ const PublicHeader = () => {
     >
       <Toolbar sx={{ maxWidth: "1200px", width: "100%", mx: "auto", py: 1 }}>
 
+
+<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+  <div id="google_translate_element"></div>
+</Box>
         {/* Logo */}
         <Box
           component={Link}
@@ -158,27 +165,29 @@ const PublicHeader = () => {
           )}
         </Box>
 
-        {/* Cart */}
-        <IconButton
-          onClick={handleCartClick}
-          sx={{
-            mr: 2,
-            color: "#374151",
-            "&:hover": { backgroundColor: "#f3f4f6" },
-          }}
-        >
-          <Badge
-            badgeContent={cartCount}
+        {/* Cart (Hidden on Cart Page) */}
+        {location.pathname !== "/cart" && (
+          <IconButton
+            onClick={handleCartClick}
             sx={{
-              "& .MuiBadge-badge": {
-                backgroundColor: "#dc2626",
-                color: "#ffffff",
-              },
+              mr: 2,
+              color: "#374151",
+              "&:hover": { backgroundColor: "#f3f4f6" },
             }}
           >
-            <ShoppingCartIcon />
-          </Badge>
-        </IconButton>
+            <Badge
+              badgeContent={cartCount}
+              sx={{
+                "& .MuiBadge-badge": {
+                  backgroundColor: "#dc2626",
+                  color: "#ffffff",
+                },
+              }}
+            >
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+        )}
 
         {/* Auth Section */}
 
@@ -229,4 +238,3 @@ const PublicHeader = () => {
 };
 
 export default PublicHeader;
-

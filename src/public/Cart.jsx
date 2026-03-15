@@ -62,7 +62,11 @@ const Cart = () => {
     pincode: ""
   });
 
+  const [addressSaved, setAddressSaved] = useState(false);
+
   const [paymentMethod, setPaymentMethod] = useState("cod");
+
+  const [paymentStatus, setPaymentStatus] = useState("");
 
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
@@ -85,9 +89,19 @@ const Cart = () => {
   const BANKS = ["SBI", "HDFC", "ICICI", "Axis", "Kotak"];
 
   useEffect(() => {
+
     if (!userId) return;
-    const stored = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
-    setCart(stored);
+
+    const storedCart = JSON.parse(localStorage.getItem(`cart_${userId}`)) || [];
+    setCart(storedCart);
+
+    const savedAddress = JSON.parse(localStorage.getItem(`address_${userId}`));
+
+    if (savedAddress) {
+      setAddress(savedAddress);
+      setAddressSaved(true);
+    }
+
   }, [userId]);
 
   const updateCart = (updated) => {
@@ -139,6 +153,9 @@ const Cart = () => {
       for (let key in address)
         if (!address[key])
           return alert("Please fill all address fields");
+
+      localStorage.setItem(`address_${userId}`, JSON.stringify(address));
+      setAddressSaved(true);
     }
 
     if (activeStep === 2 && paymentMethod !== "cod") {
@@ -181,6 +198,22 @@ const Cart = () => {
 
     try {
 
+      if (paymentMethod !== "cod") {
+
+        const success = Math.random() > 0.2;
+
+        if (!success) {
+          setPaymentStatus("FAILED ❌");
+          alert("Payment Failed");
+          return;
+        }
+
+        setPaymentStatus("SUCCESS ✅");
+
+      } else {
+        setPaymentStatus("COD - Pay on Delivery");
+      }
+
       const farmers = [...new Set(cart.map(i => i.farmer_id))];
 
       for (let farmer_id of farmers) {
@@ -206,7 +239,8 @@ const Cart = () => {
           items: itemsForFarmer,
           total_amount,
           address,
-          paymentMethod
+          paymentMethod,
+          paymentStatus
         });
       }
 
@@ -217,6 +251,10 @@ const Cart = () => {
       console.error(err);
       alert("Order failed");
     }
+  };
+
+  const handleChangeAddress = () => {
+    setAddressSaved(false);
   };
 
   const renderPaymentFields = () => {
@@ -269,7 +307,6 @@ const Cart = () => {
     if (paymentMethod === "upi")
       return (
         <Stack spacing={2} mt={2}>
-
           <FormControl fullWidth required>
             <InputLabel>UPI App</InputLabel>
             <Select
@@ -299,14 +336,12 @@ const Cart = () => {
               })
             }
           />
-
         </Stack>
       );
 
     if (paymentMethod === "netbanking")
       return (
         <Stack spacing={2} mt={2}>
-
           <FormControl fullWidth required>
             <InputLabel>Bank</InputLabel>
             <Select
@@ -349,7 +384,6 @@ const Cart = () => {
               })
             }
           />
-
         </Stack>
       );
 
@@ -453,18 +487,7 @@ const Cart = () => {
         Checkout
       </Typography>
 
-      <Stepper
-        activeStep={activeStep}
-        sx={{
-          mb:4,
-          "& .MuiStepIcon-root.Mui-completed": {
-            color: green
-          },
-          "& .MuiStepIcon-root.Mui-active": {
-            color: green
-          }
-        }}
-      >
+      <Stepper activeStep={activeStep} sx={{ mb:4 }}>
         {steps.map((label)=>(
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
@@ -474,66 +497,42 @@ const Cart = () => {
 
       {activeStep === 0 && renderCart()}
 
-      {activeStep === 1 && (
+      {activeStep === 1 && addressSaved ? (
+        <Paper sx={paperStyle}>
+          <Typography fontWeight={700}>Saved Address</Typography>
+
+          <Typography mt={1}>
+            {address.name}, {address.street}
+          </Typography>
+
+          <Typography>
+            {address.city}, {address.state} - {address.pincode}
+          </Typography>
+
+          <Typography>
+            Phone: {address.phone}
+          </Typography>
+
+          <Button sx={{ mt:2 }} onClick={handleChangeAddress}>
+            Change Address
+          </Button>
+
+        </Paper>
+      ) : activeStep === 1 && (
         <Paper sx={paperStyle}>
           <Stack spacing={2}>
-
-            <TextField
-              label="Name"
-              required
-              value={address.name}
-              onChange={(e)=>{
-                const v = e.target.value;
-                if (/^[A-Za-z ]*$/.test(v))
-                  setAddress({...address,name:v});
-              }}
-            />
-
-            <TextField
-              label="Phone"
-              required
-              inputProps={{ maxLength:10 }}
-              value={address.phone}
-              onChange={(e)=>{
-                const v = e.target.value.replace(/\D/g,"");
-                if(v.length<=10)
-                  setAddress({...address,phone:v});
-              }}
-            />
-
-            <TextField
-              label="Street"
-              required
-              value={address.street}
-              onChange={(e)=>setAddress({...address,street:e.target.value})}
-            />
-
-            <TextField
-              label="City"
-              required
-              value={address.city}
-              onChange={(e)=>setAddress({...address,city:e.target.value})}
-            />
-
-            <TextField
-              label="State"
-              required
-              value={address.state}
-              onChange={(e)=>setAddress({...address,state:e.target.value})}
-            />
-
-            <TextField
-              label="Pincode"
-              required
-              inputProps={{ maxLength:6 }}
-              value={address.pincode}
-              onChange={(e)=>{
-                const v = e.target.value.replace(/\D/g,"");
-                if(v.length<=6)
-                  setAddress({...address,pincode:v});
-              }}
-            />
-
+            <TextField label="Name" value={address.name}
+              onChange={(e)=>setAddress({...address,name:e.target.value})}/>
+            <TextField label="Phone" value={address.phone}
+              onChange={(e)=>setAddress({...address,phone:e.target.value})}/>
+            <TextField label="Street" value={address.street}
+              onChange={(e)=>setAddress({...address,street:e.target.value})}/>
+            <TextField label="City" value={address.city}
+              onChange={(e)=>setAddress({...address,city:e.target.value})}/>
+            <TextField label="State" value={address.state}
+              onChange={(e)=>setAddress({...address,state:e.target.value})}/>
+            <TextField label="Pincode" value={address.pincode}
+              onChange={(e)=>setAddress({...address,pincode:e.target.value})}/>
           </Stack>
         </Paper>
       )}
@@ -565,19 +564,9 @@ const Cart = () => {
           </Typography>
 
           {cart.map((i)=>(
-            <Stack
-              key={i.id}
-              direction="row"
-              justifyContent="space-between"
-              mt={1}
-            >
-              <Typography>
-                {i.product_name} × {i.qty}
-              </Typography>
-
-              <Typography>
-                ₹{i.price*i.qty}
-              </Typography>
+            <Stack key={i.id} direction="row" justifyContent="space-between" mt={1}>
+              <Typography>{i.product_name} × {i.qty}</Typography>
+              <Typography>₹{i.price*i.qty}</Typography>
             </Stack>
           ))}
 
@@ -595,6 +584,12 @@ const Cart = () => {
             Payment: {paymentMethod.toUpperCase()}
           </Typography>
 
+          {paymentStatus && (
+            <Typography mt={1}>
+              Payment Status: {paymentStatus}
+            </Typography>
+          )}
+
         </Paper>
       )}
 
@@ -602,6 +597,10 @@ const Cart = () => {
         <Paper sx={{...paperStyle,textAlign:"center"}}>
           <Typography variant="h4" fontWeight={800} sx={{color:green}}>
             🎉 Order Placed Successfully!
+          </Typography>
+
+          <Typography mt={2}>
+            Payment Status: {paymentStatus}
           </Typography>
 
           <Button
@@ -616,27 +615,16 @@ const Cart = () => {
 
       {activeStep < 4 && (
         <Stack direction="row" spacing={2} mt={4}>
-          <Button
-            disabled={activeStep===0}
-            onClick={handleBack}
-          >
+          <Button disabled={activeStep===0} onClick={handleBack}>
             Back
           </Button>
 
           {activeStep === 3 ? (
-            <Button
-              variant="contained"
-              sx={primaryBtn}
-              onClick={handlePlaceOrder}
-            >
+            <Button variant="contained" sx={primaryBtn} onClick={handlePlaceOrder}>
               Place Order
             </Button>
           ) : (
-            <Button
-              variant="contained"
-              sx={primaryBtn}
-              onClick={handleNext}
-            >
+            <Button variant="contained" sx={primaryBtn} onClick={handleNext}>
               Next
             </Button>
           )}
